@@ -1,24 +1,32 @@
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
+'use client';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import ExpensesClient from './ExpensesClient';
 
-export default async function ExpensesPage() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect('/login');
+export default function ExpensesPage() {
+    const [data, setData] = useState<{ expenses: any[]; orgId: string; profile: any } | null>(null);
 
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-    const orgId = profile?.org_id;
+    useEffect(() => {
+        const supabase = createClient();
+        (async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+            const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+            const orgId = profile?.org_id ?? '';
+            let expenses: any[] = [];
+            if (orgId) {
+                const { data } = await supabase
+                    .from('expenses')
+                    .select('*, submitter:profiles(id, full_name, email)')
+                    .eq('org_id', orgId)
+                    .order('expense_date', { ascending: false });
+                expenses = data ?? [];
+            }
+            setData({ expenses, orgId, profile });
+        })();
+    }, []);
 
-    let expenses: any[] = [];
-    if (orgId) {
-        const { data } = await supabase
-            .from('expenses')
-            .select('*, submitter:profiles(id, full_name, email)')
-            .eq('org_id', orgId)
-            .order('expense_date', { ascending: false });
-        expenses = data ?? [];
-    }
+    if (!data) return <div className="page-content"><div className="spinner" /></div>;
 
-    return <ExpensesClient expenses={expenses} orgId={orgId} profile={profile} />;
+    return <ExpensesClient expenses={data.expenses} orgId={data.orgId} profile={data.profile} />;
 }

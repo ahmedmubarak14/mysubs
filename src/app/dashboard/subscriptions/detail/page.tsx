@@ -1,22 +1,26 @@
-import { createClient } from '@/lib/supabase/server';
-import { redirect, notFound } from 'next/navigation';
+'use client';
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { differenceInDays, format } from 'date-fns';
-import { ArrowLeft, Edit2, Calendar, Users, DollarSign, Tag, Building2 } from 'lucide-react';
+import { ArrowLeft, Edit2, Calendar, Users, DollarSign, Tag } from 'lucide-react';
 
-export default async function SubscriptionDetailPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = await params;
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect('/login');
+function SubscriptionDetail() {
+    const searchParams = useSearchParams();
+    const id = searchParams.get('id');
+    const [sub, setSub] = useState<any | null | 'not-found'>('loading');
 
-    const { data: sub } = await supabase
-        .from('subscriptions')
-        .select('*, owner:profiles(full_name, email)')
-        .eq('id', id)
-        .single();
+    useEffect(() => {
+        if (!id) { setSub('not-found'); return; }
+        const supabase = createClient();
+        supabase.from('subscriptions').select('*, owner:profiles(full_name, email)').eq('id', id).single()
+            .then((result: { data: any }) => setSub(result.data ?? 'not-found'));
+    }, [id]);
 
-    if (!sub) notFound();
+    if (sub === 'loading') return <div className="page-content"><div className="spinner" /></div>;
+    if (sub === 'not-found') return <div className="page-content"><p>Subscription not found.</p></div>;
 
     const daysLeft = differenceInDays(new Date(sub.renewal_date), new Date());
     const monthlyCost = sub.billing_cycle === 'yearly' ? sub.cost / 12 : sub.billing_cycle === 'quarterly' ? sub.cost / 3 : sub.cost;
@@ -38,14 +42,13 @@ export default async function SubscriptionDetailPage({ params }: { params: Promi
                     </span>
                 </div>
                 <div className="topbar-actions">
-                    <Link href={`/dashboard/subscriptions/${id}/edit`} className="btn btn-primary">
+                    <Link href={`/dashboard/subscriptions/edit?id=${id}`} className="btn btn-primary">
                         <Edit2 size={15} /> Edit
                     </Link>
                 </div>
             </div>
 
             <div className="page-content" style={{ maxWidth: 700 }}>
-                {/* Header card with logo */}
                 <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 'var(--space-5)' }}>
                     {sub.logo_url ? (
                         <img src={sub.logo_url} alt={sub.name} width={64} height={64} style={{ borderRadius: 14, objectFit: 'contain', border: '1px solid var(--color-border)' }} />
@@ -61,7 +64,6 @@ export default async function SubscriptionDetailPage({ params }: { params: Promi
                     </div>
                 </div>
 
-                {/* Stat cards */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 'var(--space-4)', marginBottom: 'var(--space-5)' }}>
                     {[
                         { label: 'Monthly Cost', value: `${sub.currency} ${monthlyCost.toFixed(2)}`, icon: <DollarSign size={18} color="var(--color-purple)" />, bg: 'var(--color-purple-bg)' },
@@ -77,7 +79,6 @@ export default async function SubscriptionDetailPage({ params }: { params: Promi
                     ))}
                 </div>
 
-                {/* Details */}
                 <div className="card">
                     <div style={{ fontWeight: 700, marginBottom: 16 }}>Details</div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 24px' }}>
@@ -95,7 +96,6 @@ export default async function SubscriptionDetailPage({ params }: { params: Promi
                             </div>
                         ))}
                     </div>
-
                     {sub.notes && (
                         <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--color-border)' }}>
                             <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Notes</div>
@@ -106,4 +106,8 @@ export default async function SubscriptionDetailPage({ params }: { params: Promi
             </div>
         </div>
     );
+}
+
+export default function SubscriptionDetailPage() {
+    return <Suspense fallback={<div className="page-content"><div className="spinner" /></div>}><SubscriptionDetail /></Suspense>;
 }

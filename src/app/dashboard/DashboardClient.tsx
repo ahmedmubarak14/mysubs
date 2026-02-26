@@ -103,7 +103,7 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
             <div className="topbar">
                 <span className="topbar-title">Dashboard</span>
                 <div className="topbar-actions">
-                    <Link href="/dashboard/subscriptions/new" className="btn btn-primary btn-sm">
+                    <Link href="/dashboard/subscriptions" className="btn btn-primary btn-sm">
                         + Add Subscription
                     </Link>
                 </div>
@@ -240,7 +240,7 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
                                 {upcomingRenewals.slice(0, 6).map(sub => {
                                     const days = getDaysUntilRenewal(sub.renewal_date);
                                     return (
-                                        <Link href={`/dashboard/subscriptions/${sub.id}`} key={sub.id} className={styles.renewalItem}>
+                                        <Link href={`/dashboard/subscriptions/detail?id=${sub.id}`} key={sub.id} className={styles.renewalItem}>
                                             <div className="icon-wrap-sm" style={{
                                                 background: days <= 7 ? 'var(--color-red-bg)' : 'var(--color-orange-bg)',
                                                 color: days <= 7 ? 'var(--color-red)' : 'var(--color-orange)',

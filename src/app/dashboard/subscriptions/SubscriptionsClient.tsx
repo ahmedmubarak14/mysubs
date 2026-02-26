@@ -216,7 +216,7 @@ export default function SubscriptionsClient({ subscriptions: initialSubs, teamMe
                                                     </div>
                                                 )}
                                                 <div>
-                                                    <Link href={`/dashboard/subscriptions/${sub.id}`} style={{ fontWeight: 600, fontSize: '14px', color: 'var(--color-text-primary)' }}>
+                                                    <Link href={`/dashboard/subscriptions/detail?id=${sub.id}`} style={{ fontWeight: 600, fontSize: '14px', color: 'var(--color-text-primary)' }}>
                                                         {sub.name}
                                                     </Link>
                                                     {sub.category && <div style={{ fontSize: '11px', color: 'var(--color-text-tertiary)' }}>{sub.category}</div>}

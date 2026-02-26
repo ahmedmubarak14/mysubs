@@ -1,33 +1,32 @@
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
+'use client';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import SubscriptionsClient from './SubscriptionsClient';
 
-export default async function SubscriptionsPage() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect('/login');
+export default function SubscriptionsPage() {
+    const [data, setData] = useState<{ subscriptions: any[]; teamMembers: any[]; profile: any; orgId: string } | null>(null);
 
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-    const orgId = profile?.org_id;
+    useEffect(() => {
+        const supabase = createClient();
+        (async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+            const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+            const orgId = profile?.org_id ?? '';
+            let subscriptions: any[] = [], teamMembers: any[] = [];
+            if (orgId) {
+                const [s, m] = await Promise.all([
+                    supabase.from('subscriptions').select('*, owner:profiles(id, full_name, email)').eq('org_id', orgId).order('renewal_date'),
+                    supabase.from('profiles').select('id, full_name, email').eq('org_id', orgId),
+                ]);
+                subscriptions = s.data ?? [];
+                teamMembers = m.data ?? [];
+            }
+            setData({ subscriptions, teamMembers, profile, orgId });
+        })();
+    }, []);
 
-    let subscriptions: any[] = [];
-    let teamMembers: any[] = [];
+    if (!data) return <div className="page-content"><div className="spinner" /></div>;
 
-    if (orgId) {
-        const [subsResult, membersResult] = await Promise.all([
-            supabase.from('subscriptions').select('*, owner:profiles(id, full_name, email)').eq('org_id', orgId).order('renewal_date'),
-            supabase.from('profiles').select('id, full_name, email').eq('org_id', orgId),
-        ]);
-        subscriptions = subsResult.data ?? [];
-        teamMembers = membersResult.data ?? [];
-    }
-
-    return (
-        <SubscriptionsClient
-            subscriptions={subscriptions}
-            teamMembers={teamMembers}
-            currentProfile={profile}
-            orgId={orgId ?? ''}
-        />
-    );
+    return <SubscriptionsClient subscriptions={data.subscriptions} teamMembers={data.teamMembers} currentProfile={data.profile} orgId={data.orgId} />;
 }

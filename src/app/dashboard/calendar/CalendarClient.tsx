@@ -151,7 +151,7 @@ export default function CalendarClient({ subscriptions }: { subscriptions: Sub[]
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}><Users size={14} /> {selected.seats} users</div>
                                     </div>
                                 )}
-                                <Link href={`/dashboard/subscriptions/${selected.id}`} className="btn btn-secondary" style={{ justifyContent: 'center', marginTop: 4 }}>
+                                <Link href={`/dashboard/subscriptions/detail?id=${selected.id}`} className="btn btn-secondary" style={{ justifyContent: 'center', marginTop: 4 }}>
                                     View Details
                                 </Link>
                             </div>

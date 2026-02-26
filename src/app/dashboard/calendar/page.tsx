@@ -1,20 +1,32 @@
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
+'use client';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import CalendarClient from './CalendarClient';
 
-export default async function CalendarPage() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect('/login');
+export default function CalendarPage() {
+    const [subscriptions, setSubscriptions] = useState<any[] | null>(null);
 
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-    const orgId = profile?.org_id;
+    useEffect(() => {
+        const supabase = createClient();
+        (async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+            const { data: profile } = await supabase.from('profiles').select('org_id').eq('id', user.id).single();
+            const orgId = profile?.org_id;
+            if (orgId) {
+                const { data } = await supabase
+                    .from('subscriptions')
+                    .select('id, name, cost, currency, billing_cycle, renewal_date, status, seats')
+                    .eq('org_id', orgId)
+                    .neq('status', 'cancelled');
+                setSubscriptions(data ?? []);
+            } else {
+                setSubscriptions([]);
+            }
+        })();
+    }, []);
 
-    let subscriptions: any[] = [];
-    if (orgId) {
-        const { data } = await supabase.from('subscriptions').select('id, name, cost, currency, billing_cycle, renewal_date, status, seats').eq('org_id', orgId).neq('status', 'cancelled');
-        subscriptions = data ?? [];
-    }
+    if (subscriptions === null) return <div className="page-content"><div className="spinner" /></div>;
 
     return <CalendarClient subscriptions={subscriptions} />;
 }

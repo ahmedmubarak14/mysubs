@@ -1,24 +1,30 @@
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
+'use client';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { Bell, CheckCircle2 } from 'lucide-react';
 
-export default async function NotificationsPage() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect('/login');
+export default function NotificationsPage() {
+    const [notifications, setNotifications] = useState<any[] | null>(null);
 
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+    useEffect(() => {
+        const supabase = createClient();
+        (async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+            const { data } = await supabase
+                .from('notifications')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false })
+                .limit(50);
+            setNotifications(data ?? []);
+            // Mark all as read
+            await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id).eq('is_read', false);
+        })();
+    }, []);
 
-    const { data: notifications } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-    // Mark all as read
-    await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id).eq('is_read', false);
+    if (notifications === null) return <div className="page-content"><div className="spinner" /></div>;
 
     return (
         <div>
@@ -26,7 +32,7 @@ export default async function NotificationsPage() {
                 <span className="topbar-title">Notifications</span>
             </div>
             <div className="page-content" style={{ maxWidth: 640 }}>
-                {!notifications || notifications.length === 0 ? (
+                {notifications.length === 0 ? (
                     <div className="empty-state">
                         <div className="empty-state-icon"><Bell size={28} /></div>
                         <h3>All caught up!</h3>

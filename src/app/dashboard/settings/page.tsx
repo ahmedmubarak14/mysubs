@@ -1,25 +1,27 @@
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
+'use client';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import SettingsClient from './SettingsClient';
 
-export default async function SettingsPage() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect('/login');
+export default function SettingsPage() {
+    const [data, setData] = useState<{ profile: any; orgName: string; orgId: string | null } | null>(null);
 
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+    useEffect(() => {
+        const supabase = createClient();
+        (async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+            const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+            let orgName = '';
+            if (profile?.org_id) {
+                const { data: org } = await supabase.from('organizations').select('name').eq('id', profile.org_id).single();
+                orgName = org?.name ?? '';
+            }
+            setData({ profile, orgName, orgId: profile?.org_id ?? null });
+        })();
+    }, []);
 
-    let orgName = '';
-    if (profile?.org_id) {
-        const { data: org } = await supabase.from('organizations').select('name').eq('id', profile.org_id).single();
-        orgName = org?.name ?? '';
-    }
+    if (!data) return <div className="page-content"><div className="spinner" /></div>;
 
-    return (
-        <SettingsClient
-            profile={profile}
-            orgName={orgName}
-            orgId={profile?.org_id ?? null}
-        />
-    );
+    return <SettingsClient profile={data.profile} orgName={data.orgName} orgId={data.orgId} />;
 }
