@@ -78,8 +78,8 @@ export default function Sidebar({ profile, onToggleNotifications }: SidebarProps
                     onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
                     style={{
                         width: '100%', padding: '7px 12px', borderRadius: 8,
-                        border: '1.5px solid rgba(255,255,255,0.15)',
-                        background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.7)',
+                        border: '1.5px solid rgba(0,0,0,0.08)',
+                        background: 'rgba(0,0,0,0.04)', color: '#1e293b',
                         fontSize: 13, fontWeight: 600, cursor: 'pointer', letterSpacing: 0.5,
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                         transition: 'all 0.15s'
