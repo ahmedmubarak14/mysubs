@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap');
 
 /* ============================================================
    SUBTRACK — DESIGN SYSTEM (Splitz.live brand)
@@ -1239,5 +1240,111 @@ p {
 
   .search-input-wrapper {
     max-width: 100%;
+  }
+}
+
+/* ============================================================
+   RTL — ARABIC LANGUAGE SUPPORT
+   Activated when <html dir="rtl"> is set by LanguageContext
+   ============================================================ */
+
+[dir="rtl"] {
+  /* Use an Arabic-first font stack that supports Arabic glyphs cleanly */
+  font-family: 'Noto Sans Arabic', 'Segoe UI', 'Tahoma', var(--font-family);
+}
+
+/* Sidebar — flip from left to right */
+[dir="rtl"] .sidebar {
+  left: auto;
+  right: 0;
+  border-right: none;
+  border-left: 1px solid var(--color-border);
+  box-shadow: -1px 0 0 rgba(255, 255, 255, 0.5) inset;
+}
+
+/* Main content — flip margin to opposite side */
+[dir="rtl"] .main-content {
+  margin-left: 0;
+  margin-right: var(--sidebar-width);
+}
+
+/* Tables — flip header alignment */
+[dir="rtl"] .table th,
+[dir="rtl"] .table td {
+  text-align: right;
+}
+
+/* Stat card glow — flip to opposite corner */
+[dir="rtl"] .stat-card-glow {
+  right: auto;
+  left: -20px;
+}
+
+/* Topbar actions — already flex, will naturally flip with dir */
+[dir="rtl"] .topbar {
+  flex-direction: row-reverse;
+}
+
+/* Filter bar — reverse direction */
+[dir="rtl"] .filter-bar {
+  flex-direction: row-reverse;
+}
+
+/* Search input icon — flip padding/icon position */
+[dir="rtl"] .search-input-wrapper input {
+  padding-left: 14px;
+  padding-right: 38px;
+}
+
+[dir="rtl"] .search-input-wrapper svg {
+  left: auto;
+  right: 12px;
+}
+
+/* Sidebar user footer logout icon — push to left in RTL */
+[dir="rtl"] .sidebar-user svg:last-child {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+/* Notification sidebar — slide in from left in RTL */
+[dir="rtl"] .notifications-sidebar {
+  right: auto;
+  left: 0;
+  border-right: 1px solid var(--color-border);
+  border-left: none;
+}
+
+/* Badge dot — keep it on the correct side */
+[dir="rtl"] .badge {
+  flex-direction: row-reverse;
+}
+
+/* Modal — text alignment */
+[dir="rtl"] .modal-content {
+  text-align: right;
+}
+
+/* Form labels and hints */
+[dir="rtl"] .form-label,
+[dir="rtl"] .form-hint,
+[dir="rtl"] .form-error {
+  text-align: right;
+}
+
+
+
+/* Mobile RTL — sidebar slides from right */
+@media (max-width: 768px) {
+  [dir="rtl"] .sidebar {
+    transform: translateX(100%);
+  }
+
+  [dir="rtl"] .sidebar.open {
+    transform: translateX(0);
+  }
+
+  [dir="rtl"] .main-content {
+    margin-right: 0;
   }
 }
