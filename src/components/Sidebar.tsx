@@ -45,7 +45,7 @@ export default function Sidebar({ profile, onToggleNotifications }: SidebarProps
         <nav className="sidebar">
             {/* Logo */}
             <div className="sidebar-logo">
-                <img src="/mysubs/logo-light.png" alt="Subtrack" className="sidebar-logo-img" style={{ maxHeight: 36, width: 'auto' }} />
+                <img src="/SubTrack/logo-light.png" alt="Subtrack" className="sidebar-logo-img" style={{ maxHeight: 36, width: 'auto' }} />
             </div>
 
             {/* Navigation */}

@@ -51,7 +51,7 @@ export default function SignupPage() {
         <div className={styles.authPage}>
             <div className={styles.authLeft}>
                 <div className={styles.authBrand}>
-                    <img src="/mysubs/logo-white.png" alt="Subtrack" className="sidebar-logo-img" style={{ height: 32, width: 'auto' }} />
+                    <img src="/SubTrack/logo-white.png" alt="Subtrack" className="sidebar-logo-img" style={{ height: 32, width: 'auto' }} />
                 </div>
                 <div className={styles.authHero}>
                     <h1>30 seconds to set up.<br />Hours saved every month.</h1>

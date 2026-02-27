@@ -48,7 +48,7 @@ export default function LoginPage() {
         <div className={styles.authPage}>
             <div className={styles.authLeft}>
                 <div className={styles.authBrand}>
-                    <img src="/mysubs/logo-white.png" alt="Subtrack" className="sidebar-logo-img" style={{ height: 32, width: 'auto' }} />
+                    <img src="/SubTrack/logo-white.png" alt="Subtrack" className="sidebar-logo-img" style={{ height: 32, width: 'auto' }} />
                 </div>
                 <div className={styles.authHero}>
                     <h1>Track every subscription.<br />Save every dollar.</h1>

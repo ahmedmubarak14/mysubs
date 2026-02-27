@@ -3,7 +3,7 @@ import { LanguageProvider } from '@/lib/i18n/LanguageContext';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'MySubs — Subscription Tracker',
+  title: 'SubTrack — Subscription Tracker',
   description: 'Track all your team subscriptions, expenses and renewals in one place.',
 };
 
