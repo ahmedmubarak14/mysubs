@@ -21,7 +21,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     const [lang, setLangState] = useState<Lang>('en');
 
     useEffect(() => {
-        const stored = localStorage.getItem('mysubs_lang') as Lang | null;
+        const stored = localStorage.getItem('subtrack_lang') as Lang | null;
         if (stored === 'ar' || stored === 'en') {
             setLangState(stored);
         }
@@ -29,7 +29,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
     const setLang = (newLang: Lang) => {
         setLangState(newLang);
-        localStorage.setItem('mysubs_lang', newLang);
+        localStorage.setItem('subtrack_lang', newLang);
         document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
         document.documentElement.lang = newLang;
     };

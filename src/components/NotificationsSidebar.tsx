@@ -3,6 +3,9 @@
 import { Bell, Check, X, ArrowUpRight, Plus, RefreshCw, AlertCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { createClient } from '@/lib/supabase/client';
+import { formatDistanceToNow, isToday, isYesterday } from 'date-fns';
+
 interface Props {
     open: boolean;
     onClose: () => void;
@@ -10,15 +13,34 @@ interface Props {
 
 export default function NotificationsSidebar({ open, onClose }: Props) {
     const [filter, setFilter] = useState('All');
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    // Mock data based on the requested design
-    const notifications = [
-        { id: 1, type: 'price_hike', title: 'Salesforce CRM', desc: 'Price increasing by 8%. New monthly: $1,250 (+$92)', time: 'TODAY', unread: true },
-        { id: 2, type: 'renewal', title: 'Figma Professional', desc: 'Renewal in 2 days • $144.00', time: 'TODAY', unread: true },
-        { id: 3, type: 'trial', title: 'Notion AI', desc: 'Trial ended yesterday. Auto-converted to Pro', time: 'YESTERDAY', unread: false },
-        { id: 4, type: 'added', title: 'Linear', desc: 'New seat added by @sarah_j. Total seats: 12', time: 'YESTERDAY', unread: false },
-        { id: 5, type: 'error', title: 'QuickBooks Sync', desc: 'Sync failed 2 hours ago', time: 'YESTERDAY', unread: false },
-    ];
+    useEffect(() => {
+        if (!open) return;
+        const supabase = createClient();
+
+        async function fetchNotifs() {
+            setLoading(true);
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data } = await supabase
+                    .from('notifications')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+
+                if (data) setNotifications(data);
+
+                // Mark seen
+                await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id).eq('is_read', false);
+            }
+            setLoading(false);
+        }
+
+        fetchNotifs();
+    }, [open]);
 
     const getIcon = (type: string) => {
         if (type === 'price_hike') return <ArrowUpRight size={14} color="var(--color-red)" />;
@@ -62,7 +84,11 @@ export default function NotificationsSidebar({ open, onClose }: Props) {
                 <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         <h2 style={{ fontSize: 18, fontWeight: 800 }}>Notifications</h2>
-                        <span style={{ background: 'var(--color-accent-light)', color: 'var(--color-accent)', padding: '2px 8px', borderRadius: 12, fontSize: 11, fontWeight: 700 }}>5 New</span>
+                        {notifications.filter(n => !n.is_read).length > 0 && (
+                            <span style={{ background: 'var(--color-accent-light)', color: 'var(--color-accent)', padding: '2px 8px', borderRadius: 12, fontSize: 11, fontWeight: 700 }}>
+                                {notifications.filter(n => !n.is_read).length} New
+                            </span>
+                        )}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <button className="btn btn-ghost btn-sm" style={{ padding: 6 }}><Check size={16} /></button>
@@ -91,43 +117,47 @@ export default function NotificationsSidebar({ open, onClose }: Props) {
 
                 {/* List */}
                 <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
-                    {['TODAY', 'YESTERDAY'].map(group => (
-                        <div key={group} style={{ marginBottom: 24 }}>
-                            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-tertiary)', letterSpacing: '0.05em', marginBottom: 12 }}>{group}</div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                {notifications.filter(n => n.time === group).map(n => (
+                    {loading ? (
+                        <div style={{ padding: 20, textAlign: 'center', color: 'var(--color-text-tertiary)' }}>Loading notifications...</div>
+                    ) : notifications.length === 0 ? (
+                        <div style={{ padding: 40, textAlign: 'center', color: 'var(--color-text-secondary)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                            <Bell size={32} style={{ opacity: 0.2 }} />
+                            All caught up!
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                            {notifications.map(n => {
+                                const date = new Date(n.created_at);
+                                const timeStr = isToday(date) ? formatDistanceToNow(date, { addSuffix: true }) : isYesterday(date) ? 'Yesterday' : date.toLocaleDateString();
+
+                                return (
                                     <div key={n.id} style={{
                                         background: 'rgba(255, 255, 255, 0.5)', border: '1px solid rgba(255, 255, 255, 0.8)', borderRadius: 16,
                                         padding: 16, position: 'relative', display: 'flex', gap: 14,
-                                        boxShadow: '0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,1)'
+                                        boxShadow: '0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,1)',
+                                        opacity: n.is_read ? 0.7 : 1
                                     }}>
-                                        {n.unread && <div style={{ position: 'absolute', top: 16, right: 16, width: 6, height: 6, borderRadius: '50%', background: 'var(--color-accent)' }} />}
+                                        {!n.is_read && <div style={{ position: 'absolute', top: 16, right: 16, width: 6, height: 6, borderRadius: '50%', background: 'var(--color-accent)' }} />}
                                         <div style={{ width: 32, height: 32, borderRadius: '50%', background: getColor(n.type), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                             {getIcon(n.type)}
                                         </div>
                                         <div style={{ flex: 1 }}>
-                                            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, paddingRight: 10 }}>{n.title}</div>
-                                            <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>{n.desc}</div>
+                                            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, paddingRight: 10 }}>Notification</div>
+                                            <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>{n.message}</div>
+                                            <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', marginTop: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{timeStr}</div>
 
-                                            {/* Action Buttons Mock */}
-                                            {n.type === 'renewal' && (
+                                            {/* Action Buttons conditionally */}
+                                            {n.type === 'renewal_reminder' && (
                                                 <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                                                    <button className="btn btn-primary btn-sm" style={{ padding: '4px 12px', fontSize: 12 }}>Approve</button>
                                                     <button className="btn btn-secondary btn-sm" style={{ padding: '4px 12px', fontSize: 12 }}>Review</button>
                                                 </div>
                                             )}
-                                            {n.type === 'price_hike' && (
-                                                <button className="btn btn-secondary btn-sm" style={{ padding: '4px 12px', fontSize: 12, marginTop: 12, width: '100%', justifyContent: 'center' }}>See Details</button>
-                                            )}
-                                            {n.type === 'trial' && (
-                                                <div style={{ color: 'var(--color-accent)', fontSize: 12, fontWeight: 600, marginTop: 8, cursor: 'pointer' }}>Manage</div>
-                                            )}
                                         </div>
                                     </div>
-                                ))}
-                            </div>
+                                );
+                            })}
                         </div>
-                    ))}
+                    )}
                 </div>
 
                 {/* Footer */}

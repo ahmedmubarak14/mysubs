@@ -45,10 +45,7 @@ export default function Sidebar({ profile, onToggleNotifications }: SidebarProps
         <nav className="sidebar">
             {/* Logo */}
             <div className="sidebar-logo">
-                <div className="sidebar-logo-icon">
-                    <Zap size={18} />
-                </div>
-                <span className="sidebar-logo-text">MySubs</span>
+                <img src="/mysubs/logo.png" alt="Subtrack" className="sidebar-logo-img" style={{ height: 32, width: 'auto' }} />
             </div>
 
             {/* Navigation */}
@@ -76,7 +73,7 @@ export default function Sidebar({ profile, onToggleNotifications }: SidebarProps
             </div>
 
             {/* Language Toggle */}
-            <div style={{ padding: '0 12px 8px' }}>
+            <div style={{ padding: '0 12px 8px', marginTop: 'auto' }}>
                 <button
                     onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
                     style={{

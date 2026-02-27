@@ -15,6 +15,7 @@ import Link from 'next/link';
 import type { Subscription, Expense, Profile } from '@/types';
 import { CURRENCIES } from '@/types';
 import styles from './dashboard.module.css';
+import DashboardCalendar from '@/components/DashboardCalendar';
 import Topbar from '@/components/Topbar';
 import { useNotifications } from '@/components/NotificationsContext';
 
@@ -264,52 +265,9 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
 
                 {/* Bottom Row */}
                 <div className={styles.bottomRow}>
-                    {/* Upcoming Renewals */}
-                    <div className="card" style={{ flex: 1 }}>
-                        <div className={styles.cardHeader}>
-                            <h3 className={styles.cardTitle}>Upcoming Renewals</h3>
-                            <Link href="/dashboard/calendar" className="btn btn-ghost btn-sm">
-                                View calendar <ArrowRight size={14} />
-                            </Link>
-                        </div>
-                        {upcomingRenewals.length === 0 ? (
-                            <div className="empty-state" style={{ padding: '32px' }}>
-                                <p style={{ fontSize: '13px' }}>No renewals in the next 30 days 🎉</p>
-                            </div>
-                        ) : (
-                            <div className={styles.renewalList}>
-                                {upcomingRenewals.slice(0, 6).map(sub => {
-                                    const days = getDaysUntilRenewal(sub.renewal_date);
-                                    return (
-                                        <Link href={`/dashboard/subscriptions/detail?id=${sub.id}`} key={sub.id} className={styles.renewalItem}>
-                                            <div className="icon-wrap-sm" style={{
-                                                background: days <= 7 ? 'var(--color-red-bg)' : 'var(--color-orange-bg)',
-                                                color: days <= 7 ? 'var(--color-red)' : 'var(--color-orange)',
-                                                fontSize: '15px', fontWeight: 700
-                                            }}>
-                                                {sub.name?.[0] || '?'}
-                                            </div>
-                                            <div className={styles.renewalInfo}>
-                                                <div className={styles.renewalName}>{sub.name}</div>
-                                                <div className={styles.renewalMeta}>
-                                                    {sub.seats > 0 && (
-                                                        <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: 'var(--color-text-tertiary)', fontSize: '11px' }}>
-                                                            <Users size={10} />{sub.seats} users
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className={styles.renewalRight}>
-                                                <div className={styles.renewalCost}>{formatCurrency(sub.cost, sub.currency)}</div>
-                                                <div className={`${styles.renewalDays} ${days <= 7 ? styles.urgent : ''}`}>
-                                                    {days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days}d`}
-                                                </div>
-                                            </div>
-                                        </Link>
-                                    );
-                                })}
-                            </div>
-                        )}
+                    {/* Calendar View */}
+                    <div style={{ flex: 1, minWidth: 320 }}>
+                        <DashboardCalendar subscriptions={subscriptions} />
                     </div>
 
                     {/* All Subscriptions Table */}

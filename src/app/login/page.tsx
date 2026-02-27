@@ -48,10 +48,7 @@ export default function LoginPage() {
         <div className={styles.authPage}>
             <div className={styles.authLeft}>
                 <div className={styles.authBrand}>
-                    <div className={styles.authLogo}>
-                        <Zap size={22} />
-                    </div>
-                    <span className={styles.authBrandName}>MySubs</span>
+                    <img src="/mysubs/logo.png" alt="Subtrack" className="sidebar-logo-img" style={{ height: 32, width: 'auto' }} />
                 </div>
                 <div className={styles.authHero}>
                     <h1>Track every subscription.<br />Save every dollar.</h1>
@@ -76,7 +73,7 @@ export default function LoginPage() {
             <div className={styles.authRight}>
                 <div className={styles.authCard}>
                     <h2>Welcome back</h2>
-                    <p className={styles.authSubtitle}>Sign in to your MySubs workspace</p>
+                    <p className={styles.authSubtitle}>Sign in to your Subtrack workspace</p>
 
                     {error && (
                         <div className={styles.authError}>{error}</div>

@@ -35,7 +35,7 @@ export default function ImportSubscriptionsPage() {
                         </div>
 
                         <p style={{ fontSize: 15, color: 'var(--color-text-secondary)', lineHeight: 1.5, maxWidth: 500 }}>
-                            Choose how you want to import your team's subscription data into Subsight. You can always add more sources later.
+                            Choose how you want to import your team's subscription data into Subtrack. You can always add more sources later.
                         </p>
                     </div>
 

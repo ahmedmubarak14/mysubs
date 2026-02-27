@@ -51,8 +51,7 @@ export default function SignupPage() {
         <div className={styles.authPage}>
             <div className={styles.authLeft}>
                 <div className={styles.authBrand}>
-                    <div className={styles.authLogo}><Zap size={22} /></div>
-                    <span className={styles.authBrandName}>MySubs</span>
+                    <img src="/mysubs/logo.png" alt="Subtrack" className="sidebar-logo-img" style={{ height: 32, width: 'auto' }} />
                 </div>
                 <div className={styles.authHero}>
                     <h1>30 seconds to set up.<br />Hours saved every month.</h1>
@@ -80,7 +79,7 @@ export default function SignupPage() {
                     <p className={styles.authSubtitle}>
                         {step === 'credentials'
                             ? 'Start tracking your team subscriptions today'
-                            : "This is your organization's MySubs workspace"}
+                            : "This is your organization's Subtrack workspace"}
                     </p>
 
                     {error && <div className={styles.authError}>{error}</div>}

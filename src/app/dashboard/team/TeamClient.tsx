@@ -153,7 +153,7 @@ export default function TeamClient({ members, subscriptions, currentProfile, org
                                             {stats.subsCount > 0 && (
                                                 <div style={{ display: 'flex', alignItems: 'center' }}>
                                                     {subscriptions.filter(s => s.owner_id === member.id).slice(0, 3).map((sub, i) => (
-                                                        <div key={sub.id} style={{
+                                                        <div key={sub.id || `sub-${i}`} style={{
                                                             width: 24, height: 24, borderRadius: 6,
                                                             background: 'rgba(255,255,255,0.8)', border: '1px solid var(--color-border-glass)',
                                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
