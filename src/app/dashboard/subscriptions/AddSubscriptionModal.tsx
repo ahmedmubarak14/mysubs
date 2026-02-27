@@ -236,11 +236,11 @@ export default function AddSubscriptionModal({ onClose, subscription, teamMember
                                     onClick={() => handlePickApp(app)}
                                     style={{
                                         display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
-                                        border: '1.5px solid var(--color-border)', borderRadius: 12, cursor: 'pointer',
-                                        background: 'var(--color-bg)', transition: 'all 0.15s'
+                                        border: '1px solid var(--color-border-glass)', borderRadius: 12, cursor: 'pointer',
+                                        background: 'var(--color-bg-secondary)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', transition: 'all 0.2s cubic-bezier(0.25, 1.0, 0.5, 1.0)'
                                     }}
-                                    onMouseOver={e => { e.currentTarget.style.borderColor = 'var(--color-accent)'; e.currentTarget.style.background = 'var(--color-purple-bg)'; }}
-                                    onMouseOut={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.background = 'var(--color-bg)'; }}
+                                    onMouseOver={e => { e.currentTarget.style.boxShadow = 'var(--shadow-md)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.7)'; }}
+                                    onMouseOut={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.background = 'var(--color-bg-secondary)'; }}
                                 >
                                     <AppLogo domain={app.domain} name={app.name} />
                                     <div>

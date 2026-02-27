@@ -86,10 +86,11 @@ export default function DatePicker({ value, onChange, placeholder, label, badge,
                 style={{
                     width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                     padding: '9px 12px', borderRadius: 'var(--radius-md)',
-                    border: `1.5px solid ${open ? 'var(--color-accent)' : 'var(--color-border)'}`,
+                    border: `1px solid ${open ? 'var(--color-accent)' : 'var(--color-border)'}`,
                     background: 'var(--color-bg-secondary)', cursor: 'pointer',
-                    transition: 'border-color 0.15s', textAlign: 'left',
-                    boxShadow: open ? '0 0 0 3px rgba(134,77,179,0.12)' : 'none',
+                    backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+                    transition: 'all 0.2s', textAlign: 'left',
+                    boxShadow: open ? '0 0 0 3px rgba(134,77,179,0.12), var(--shadow-sm)' : 'inset 0 1px 0 var(--color-border-glass)',
                 }}
             >
                 <Calendar size={15} color={open ? 'var(--color-accent)' : 'var(--color-text-tertiary)'} style={{ flexShrink: 0 }} />
@@ -111,10 +112,12 @@ export default function DatePicker({ value, onChange, placeholder, label, badge,
             {open && (
                 <div style={{
                     position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 1000,
-                    background: 'var(--color-bg)',
-                    border: '1.5px solid var(--color-accent)',
+                    background: 'var(--color-bg-secondary)',
+                    backdropFilter: 'var(--glass-blur)',
+                    WebkitBackdropFilter: 'var(--glass-blur)',
+                    border: '1px solid var(--color-border-glass)',
                     borderRadius: 14,
-                    boxShadow: '0 16px 40px rgba(0,0,0,0.35)',
+                    boxShadow: 'var(--shadow-lg), 0 0 0 1px var(--color-border)',
                     padding: '14px 14px 12px',
                     minWidth: 270,
                     animation: 'fadeSlideIn 0.12s ease',
@@ -124,7 +127,7 @@ export default function DatePicker({ value, onChange, placeholder, label, badge,
                         <button
                             type="button"
                             onClick={() => setView(v => subMonths(v, 1))}
-                            style={{ background: 'var(--color-bg-secondary)', border: 'none', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-secondary)' }}
+                            style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-secondary)' }}
                         >
                             <ChevronLeft size={14} />
                         </button>
@@ -136,7 +139,7 @@ export default function DatePicker({ value, onChange, placeholder, label, badge,
                         <button
                             type="button"
                             onClick={() => setView(v => addMonths(v, 1))}
-                            style={{ background: 'var(--color-bg-secondary)', border: 'none', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-secondary)' }}
+                            style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-secondary)' }}
                         >
                             <ChevronRight size={14} />
                         </button>

@@ -149,7 +149,7 @@ export default function SubscriptionsClient({ subscriptions: initialSubs, teamMe
                 {/* Summary strip */}
                 <div style={{ display: 'flex', gap: 'var(--space-4)', marginBottom: 'var(--space-6)', flexWrap: 'wrap' }}>
                     {/* Total Monthly — dual currency card */}
-                    <div style={{ background: 'var(--color-bg-secondary)', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-lg)', padding: '10px 18px', display: 'flex', flexDirection: 'column', minWidth: 160 }}>
+                    <div className="card" style={{ padding: '12px 20px', display: 'flex', flexDirection: 'column', minWidth: 160, flex: 1 }}>
                         <span style={{ fontSize: '11px', color: 'var(--color-text-tertiary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Monthly</span>
                         <span style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800, color: 'var(--color-purple)' }}>${totalMonthlyUSD.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
                         <span style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', fontWeight: 600, marginTop: 1 }}>﷼ {totalMonthlySAR.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} SAR</span>
@@ -159,7 +159,7 @@ export default function SubscriptionsClient({ subscriptions: initialSubs, teamMe
                         { label: 'Expiring', value: subscriptions.filter(s => s.status === 'expiring').length, color: 'var(--color-orange)' },
                         { label: 'Trial', value: subscriptions.filter(s => s.status === 'trial').length, color: 'var(--color-blue)' },
                     ].map(({ label, value, color }) => (
-                        <div key={label} style={{ background: 'var(--color-bg-secondary)', border: '1.5px solid var(--color-border)', borderRadius: 'var(--radius-lg)', padding: '10px 18px', display: 'flex', flexDirection: 'column', minWidth: 100 }}>
+                        <div key={label} className="card" style={{ padding: '12px 20px', display: 'flex', flexDirection: 'column', minWidth: 120, flex: 1 }}>
                             <span style={{ fontSize: '11px', color: 'var(--color-text-tertiary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
                             <span style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800, color }}>{value}</span>
                         </div>
@@ -185,7 +185,7 @@ export default function SubscriptionsClient({ subscriptions: initialSubs, teamMe
                 </div>
 
                 {/* Table */}
-                <div className="table-wrapper">
+                <div className="table-wrapper card" style={{ padding: 0, overflow: 'hidden' }}>
                     <table className="table">
                         <thead>
                             <tr>
@@ -230,7 +230,7 @@ export default function SubscriptionsClient({ subscriptions: initialSubs, teamMe
                                         <td>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                                 {sub.logo_url ? (
-                                                    <img src={sub.logo_url} alt={sub.name} width={28} height={28} style={{ borderRadius: 6, objectFit: 'contain', border: '1px solid var(--color-border)', background: '#fff', padding: 2 }} />
+                                                    <img src={sub.logo_url} alt={sub.name} width={32} height={32} style={{ borderRadius: 8, objectFit: 'contain', border: '1px solid var(--color-border)', background: 'var(--color-bg-tertiary)', padding: 2 }} />
                                                 ) : (
                                                     <div className="icon-wrap-sm" style={{ background: 'var(--color-accent-light)', color: 'var(--color-accent)', fontWeight: 800, fontSize: 13 }}>
                                                         {sub.name[0]?.toUpperCase()}

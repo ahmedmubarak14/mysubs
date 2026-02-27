@@ -3,12 +3,14 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Sidebar from '@/components/Sidebar';
+import NotificationsSidebar from '@/components/NotificationsSidebar';
 import type { Profile } from '@/types';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
+    const [showNotifications, setShowNotifications] = useState(false);
 
     useEffect(() => {
         const supabase = createClient();
@@ -34,10 +36,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     return (
         <div className="app-shell">
-            <Sidebar profile={profile} />
+            <Sidebar profile={profile} onToggleNotifications={() => setShowNotifications(true)} />
             <div className="main-content">
                 {children}
             </div>
+            <NotificationsSidebar open={showNotifications} onClose={() => setShowNotifications(false)} />
         </div>
     );
 }

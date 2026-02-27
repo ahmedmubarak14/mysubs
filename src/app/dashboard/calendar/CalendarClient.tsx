@@ -15,6 +15,7 @@ interface Sub {
     renewal_date: string;
     status: string;
     seats: number;
+    logo_url?: string;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -105,11 +106,36 @@ export default function CalendarClient({ subscriptions }: { subscriptions: Sub[]
                                         {daysSubs.slice(0, 3).map(sub => (
                                             <div key={sub.id}
                                                 className="calendar-event"
-                                                style={{ background: `${STATUS_COLORS[sub.status]}22`, color: STATUS_COLORS[sub.status] }}
+                                                style={{
+                                                    background: `rgba(255, 255, 255, 0.75)`,
+                                                    backdropFilter: 'blur(16px) saturate(200%)', WebkitBackdropFilter: 'blur(16px) saturate(200%)',
+                                                    border: `1px solid rgba(255, 255, 255, 0.8)`,
+                                                    color: 'var(--color-text-primary)',
+                                                    padding: '4px 8px', display: 'flex', flexDirection: 'column', gap: 2,
+                                                    borderRadius: 'var(--radius-lg)',
+                                                    boxShadow: `0 4px 12px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,1), inset 0 0 0 1.5px ${STATUS_COLORS[sub.status]}33`,
+                                                    cursor: 'pointer', transition: 'all 0.2s cubic-bezier(0.25, 1.0, 0.5, 1.0)',
+                                                    position: 'relative', zIndex: 10,
+                                                    ...(selected?.id === sub.id ? { borderColor: STATUS_COLORS[sub.status], boxShadow: `0 4px 16px ${STATUS_COLORS[sub.status]}33, inset 0 1px 0 rgba(255,255,255,1), inset 0 0 0 1.5px ${STATUS_COLORS[sub.status]}` } : {})
+                                                }}
                                                 onClick={() => setSelected(selected?.id === sub.id ? null : sub)}
                                                 title={`${sub.name} — ${formatCurrency(sub.cost, sub.currency)}`}
+                                                onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+                                                onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
                                             >
-                                                {sub.name}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%' }}>
+                                                    {sub.logo_url ? (
+                                                        <img src={sub.logo_url} alt={sub.name} style={{ width: 14, height: 14, borderRadius: 3, objectFit: 'contain' }} />
+                                                    ) : (
+                                                        <div style={{ width: 14, height: 14, borderRadius: 3, background: STATUS_COLORS[sub.status], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, color: '#fff', fontWeight: 800 }}>
+                                                            {sub.name?.[0] || '?'}
+                                                        </div>
+                                                    )}
+                                                    <span style={{ fontWeight: 600, fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub.name}</span>
+                                                </div>
+                                                <div style={{ fontSize: 10, color: STATUS_COLORS[sub.status], fontWeight: 700, paddingLeft: 20 }}>
+                                                    {formatCurrency(sub.cost, sub.currency)}
+                                                </div>
                                             </div>
                                         ))}
                                         {daysSubs.length > 3 && (

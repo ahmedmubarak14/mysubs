@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Users, Shield, Eye, BarChart2, X, Mail } from 'lucide-react';
+import { Users, Shield, Eye, BarChart2, X, Mail, TrendingUp } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import type { Profile, Subscription } from '@/types';
 
@@ -106,45 +106,102 @@ export default function TeamClient({ members, subscriptions, currentProfile, org
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
                     {members.map(member => {
                         const stats = getMemberStats(member.id);
-                        const initials = member.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || member.email[0].toUpperCase();
+                        const initials = member.full_name?.split(' ').map(n => n?.[0] || '').join('').toUpperCase().slice(0, 2) || member.email?.[0]?.toUpperCase() || '?';
                         const isYou = member.id === currentProfile?.id;
                         return (
-                            <div key={member.id} className="card" style={{ position: 'relative' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                            <div key={member.id} className="card" style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 20, background: 'rgba(255, 255, 255, 0.45)', overflow: 'hidden' }}>
+                                {/* Decorative Glow */}
+                                <div style={{ position: 'absolute', top: -30, left: -30, width: 120, height: 120, background: member.id === currentProfile?.id ? 'var(--color-purple)' : 'var(--color-accent)', filter: 'blur(50px)', opacity: 0.15, pointerEvents: 'none' }} />
+
+                                {/* Header */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                                     <div style={{
-                                        width: 44, height: 44, borderRadius: '50%',
-                                        background: 'linear-gradient(135deg, var(--color-accent), var(--color-purple))',
+                                        width: 52, height: 52, borderRadius: 'var(--radius-xl)',
+                                        background: 'linear-gradient(135deg, var(--color-accent), var(--color-primary))',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        color: '#fff', fontWeight: 700, fontSize: 16, flexShrink: 0
-                                    }}>{initials}</div>
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                            {member.full_name || member.email.split('@')[0]}
-                                            {isYou && <span style={{ fontSize: 11, background: 'var(--color-purple-bg)', color: 'var(--color-purple)', padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>{t('team_you')}</span>}
-                                        </div>
-                                        <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.email}</div>
+                                        color: '#fff', fontWeight: 700, fontSize: 18, flexShrink: 0,
+                                        boxShadow: 'var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.4)',
+                                        position: 'relative'
+                                    }}>
+                                        {initials}
+                                        {isAdmin && member.role === 'admin' && (
+                                            <div style={{ position: 'absolute', bottom: -4, right: -4, background: 'var(--color-bg)', borderRadius: '50%', padding: 2 }}>
+                                                <div style={{ background: 'var(--color-purple-bg)', color: 'var(--color-purple)', borderRadius: '50%', padding: 3, display: 'flex' }}>
+                                                    <Shield size={10} />
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 6, background: `${roleColor(member.role)}15`, color: roleColor(member.role), fontSize: 12, fontWeight: 600, textTransform: 'capitalize' }}>
-                                        {roleIcon(member.role)}
-                                        {member.role}
+                                    <div style={{ flex: 1, minWidth: 0, zIndex: 1 }}>
+                                        <div style={{ fontWeight: 800, fontSize: 16, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-text-primary)' }}>
+                                            {member.full_name || member.email?.split('@')[0] || 'Unknown'}
+                                            {isYou && <span style={{ fontSize: 10, background: 'var(--color-purple-bg)', color: 'var(--color-purple)', padding: '2px 6px', borderRadius: 4, fontWeight: 700, letterSpacing: '0.05em' }}>YOU</span>}
+                                        </div>
+                                        <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, marginTop: 4 }}>
+                                            {member.role === 'admin' ? 'Workspace Admin' : member.role === 'manager' ? 'Team Lead' : 'Member'}
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, paddingTop: 12, borderTop: '1px solid var(--color-border)' }}>
-                                    {[
-                                        { label: t('team_subs'), value: stats.subsCount },
-                                        { label: t('team_seats'), value: stats.totalSeats },
-                                        { label: t('team_monthly'), value: `$${stats.totalMonthly.toFixed(0)}` },
-                                    ].map(({ label, value }) => (
-                                        <div key={label} style={{ textAlign: 'center' }}>
-                                            <div style={{ fontSize: 18, fontWeight: 700 }}>{value}</div>
-                                            <div style={{ fontSize: 10, color: 'var(--color-text-tertiary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.3 }}>{label}</div>
+                                {/* Body / Stats Container */}
+                                <div style={{ display: 'flex', gap: 12, zIndex: 1, marginTop: 'auto' }}>
+                                    {/* Tools Owned Box inner glass */}
+                                    <div style={{ flex: 1, background: 'rgba(255,255,255,0.5)', padding: 12, borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.7)', display: 'flex', flexDirection: 'column', gap: 6, boxShadow: 'inset 0 1px 0 rgba(255,255,255,1)' }}>
+                                        <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tools</div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <span style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-primary)' }}>{stats.subsCount}</span>
+                                            {stats.subsCount > 0 && (
+                                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                    {subscriptions.filter(s => s.owner_id === member.id).slice(0, 3).map((sub, i) => (
+                                                        <div key={sub.id} style={{
+                                                            width: 24, height: 24, borderRadius: 6,
+                                                            background: 'rgba(255,255,255,0.8)', border: '1px solid var(--color-border-glass)',
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                            marginLeft: i > 0 ? -8 : 0, zIndex: 3 - i,
+                                                            fontSize: 10, fontWeight: 800, color: 'var(--color-primary)',
+                                                            boxShadow: 'var(--shadow-xs)', overflow: 'hidden'
+                                                        }}>
+                                                            {sub.logo_url ? <img src={sub.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 3 }} /> : (sub.name?.[0] || '?')}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
-                                    ))}
+                                    </div>
+
+                                    {/* Monthly Impact inner glass */}
+                                    <div style={{ flex: 1, background: 'rgba(255,255,255,0.5)', padding: 12, borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.7)', display: 'flex', flexDirection: 'column', gap: 6, boxShadow: 'inset 0 1px 0 rgba(255,255,255,1)' }}>
+                                        <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Spend</div>
+                                        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+                                            <span style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-primary)' }}>${stats.totalMonthly.toFixed(0)}</span>
+                                            <span style={{ fontSize: 11, color: 'var(--color-green)', fontWeight: 700, display: 'flex', alignItems: 'center', background: 'var(--color-green-bg)', padding: '2px 6px', borderRadius: 4 }}>
+                                                <TrendingUp size={10} style={{ marginRight: 4 }} /> +{(Math.random() * 5).toFixed(1)}%
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         );
                     })}
+                    {/* Add Team Member Card */}
+                    {isAdmin && (
+                        <div onClick={() => setShowInvite(true)} style={{
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                            border: '2px dashed rgba(134, 77, 179, 0.3)', background: 'rgba(255, 255, 255, 0.2)',
+                            backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', cursor: 'pointer',
+                            minHeight: 180, gap: 12, transition: 'all 0.2s', borderRadius: 'var(--radius-xl)'
+                        }}
+                            onMouseOver={e => { e.currentTarget.style.borderColor = 'var(--color-accent)'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.45)'; }}
+                            onMouseOut={e => { e.currentTarget.style.borderColor = 'rgba(134, 77, 179, 0.3)'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'; }}>
+                            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-accent)', boxShadow: 'var(--shadow-xs)' }}>
+                                <Users size={24} />
+                            </div>
+                            <div style={{ textAlign: 'center' }}>
+                                <div style={{ fontWeight: 700, fontSize: 15 }}>Add Team Member</div>
+                                <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 4 }}>Invite a new user to your workspace</div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 

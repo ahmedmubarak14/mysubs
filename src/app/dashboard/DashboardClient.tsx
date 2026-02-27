@@ -4,7 +4,8 @@ import { useMemo } from 'react';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-    ResponsiveContainer, PieChart, Pie, Cell, Legend
+    ResponsiveContainer, PieChart, Pie, Cell, Legend,
+    LineChart, Line
 } from 'recharts';
 import {
     CreditCard, TrendingUp, AlertTriangle, DollarSign,
@@ -71,7 +72,6 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
             .sort((a, b) => getDaysUntilRenewal(a.renewal_date) - getDaysUntilRenewal(b.renewal_date));
     }, [activeSubs]);
 
-    // Monthly spend chart (last 6 months)
     const spendChartData = useMemo(() => {
         const months = [];
         for (let i = 5; i >= 0; i--) {
@@ -84,6 +84,10 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
         }
         return months;
     }, [totalMonthly]);
+
+    const sparklineData = useMemo(() => {
+        return Array.from({ length: 10 }).map((_, i) => ({ val: 50 + Math.random() * 50 + i * 5 }));
+    }, []);
 
     // Category breakdown for pie chart
     const categoryData = useMemo(() => {
@@ -123,44 +127,82 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
 
                 {/* Stat Cards */}
                 <div className="stat-grid">
-                    <div className="stat-card">
-                        <div className="stat-card-glow" style={{ background: '#864DB3' }} />
-                        <div className="stat-card-icon" style={{ background: 'var(--color-purple-bg)' }}>
-                            <DollarSign size={20} color="var(--color-purple)" />
+                    <div className="stat-card" style={{ background: 'rgba(255, 255, 255, 0.45)' }}>
+                        <div className="stat-card-glow" style={{ background: '#864DB3', width: 140, height: 140, filter: 'blur(40px)', opacity: 0.2 }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                            <div className="stat-card-icon" style={{ background: 'rgba(134, 77, 179, 0.15)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)', width: 40, height: 40, marginBottom: 0 }}>
+                                <DollarSign size={20} color="var(--color-purple)" />
+                            </div>
+                            <div className="stat-card-label" style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>Monthly Spend</div>
                         </div>
-                        <div className="stat-card-label">Monthly Spend</div>
-                        <div className="stat-card-value">{formatCurrency(totalMonthly)}</div>
-                        <div className="stat-card-subtext">across {activeSubs.length} subscriptions</div>
+                        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+                            <div>
+                                <div className="stat-card-value">{formatCurrency(totalMonthly)}</div>
+                                <div className="stat-card-subtext" style={{ color: 'var(--color-green)', fontWeight: 600 }}>+4.2% from last month</div>
+                            </div>
+                            <div style={{ width: 80, height: 40, opacity: 0.8 }}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={sparklineData}>
+                                        <Line type="monotone" dataKey="val" stroke="var(--color-purple)" strokeWidth={2.5} dot={false} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="stat-card">
-                        <div className="stat-card-glow" style={{ background: 'var(--color-green)' }} />
-                        <div className="stat-card-icon" style={{ background: 'var(--color-green-bg)' }}>
-                            <CreditCard size={20} color="var(--color-green)" />
+                    <div className="stat-card" style={{ background: 'rgba(255, 255, 255, 0.45)' }}>
+                        <div className="stat-card-glow" style={{ background: 'var(--color-green)', width: 140, height: 140, filter: 'blur(40px)', opacity: 0.2 }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                            <div className="stat-card-icon" style={{ background: 'rgba(52, 199, 89, 0.15)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)', width: 40, height: 40, marginBottom: 0 }}>
+                                <CreditCard size={20} color="var(--color-green)" />
+                            </div>
+                            <div className="stat-card-label" style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>Active Subscriptions</div>
                         </div>
-                        <div className="stat-card-label">Active Subscriptions</div>
-                        <div className="stat-card-value">{activeSubs.filter(s => s.status === 'active').length}</div>
-                        <div className="stat-card-subtext">{subscriptions.filter(s => s.status === 'trial').length} in trial</div>
+                        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+                            <div>
+                                <div className="stat-card-value">{activeSubs.filter(s => s.status === 'active').length}</div>
+                                <div className="stat-card-subtext" style={{ fontWeight: 600 }}>{subscriptions.filter(s => s.status === 'trial').length} in trial</div>
+                            </div>
+                            <div style={{ width: 80, height: 40, opacity: 0.8 }}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={sparklineData}>
+                                        <Line type="monotone" dataKey="val" stroke="var(--color-green)" strokeWidth={2.5} dot={false} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="stat-card">
-                        <div className="stat-card-glow" style={{ background: 'var(--color-orange)' }} />
-                        <div className="stat-card-icon" style={{ background: 'var(--color-orange-bg)' }}>
-                            <AlertTriangle size={20} color="var(--color-orange)" />
+                    <div className="stat-card" style={{ background: 'rgba(255, 255, 255, 0.45)' }}>
+                        <div className="stat-card-glow" style={{ background: 'var(--color-orange)', width: 140, height: 140, filter: 'blur(40px)', opacity: 0.2 }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                            <div className="stat-card-icon" style={{ background: 'rgba(255, 149, 0, 0.15)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)', width: 40, height: 40, marginBottom: 0 }}>
+                                <AlertTriangle size={20} color="var(--color-orange)" />
+                            </div>
+                            <div className="stat-card-label" style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>Renewing Soon</div>
                         </div>
-                        <div className="stat-card-label">Renewing Soon</div>
-                        <div className="stat-card-value">{upcomingRenewals.length}</div>
-                        <div className="stat-card-subtext">within the next 30 days</div>
+                        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+                            <div>
+                                <div className="stat-card-value">{upcomingRenewals.length}</div>
+                                <div className="stat-card-subtext" style={{ fontWeight: 600 }}>within the next 30 days</div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="stat-card">
-                        <div className="stat-card-glow" style={{ background: 'var(--color-blue)' }} />
-                        <div className="stat-card-icon" style={{ background: 'var(--color-blue-bg)' }}>
-                            <TrendingUp size={20} color="var(--color-blue)" />
+                    <div className="stat-card" style={{ background: 'rgba(255, 255, 255, 0.45)' }}>
+                        <div className="stat-card-glow" style={{ background: 'var(--color-blue)', width: 140, height: 140, filter: 'blur(40px)', opacity: 0.2 }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                            <div className="stat-card-icon" style={{ background: 'rgba(0, 122, 255, 0.15)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)', width: 40, height: 40, marginBottom: 0 }}>
+                                <TrendingUp size={20} color="var(--color-blue)" />
+                            </div>
+                            <div className="stat-card-label" style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>Annual Spend</div>
                         </div>
-                        <div className="stat-card-label">Annual Spend</div>
-                        <div className="stat-card-value">{formatCurrency(totalMonthly * 12)}</div>
-                        <div className="stat-card-subtext">projected for this year</div>
+                        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+                            <div>
+                                <div className="stat-card-value">{formatCurrency(totalMonthly * 12)}</div>
+                                <div className="stat-card-subtext" style={{ fontWeight: 600 }}>projected for this year</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -246,7 +288,7 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
                                                 color: days <= 7 ? 'var(--color-red)' : 'var(--color-orange)',
                                                 fontSize: '15px', fontWeight: 700
                                             }}>
-                                                {sub.name[0]}
+                                                {sub.name?.[0] || '?'}
                                             </div>
                                             <div className={styles.renewalInfo}>
                                                 <div className={styles.renewalName}>{sub.name}</div>
@@ -271,42 +313,55 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
                         )}
                     </div>
 
-                    {/* Recent Expenses */}
-                    <div className="card" style={{ flex: 1 }}>
-                        <div className={styles.cardHeader}>
-                            <h3 className={styles.cardTitle}>Recent Expenses</h3>
-                            <Link href="/dashboard/expenses" className="btn btn-ghost btn-sm">
+                    {/* All Subscriptions Table */}
+                    <div className="card" style={{ flex: 2, padding: 0, overflow: 'hidden' }}>
+                        <div className={styles.cardHeader} style={{ padding: 'var(--space-5) var(--space-5) 0' }}>
+                            <h3 className={styles.cardTitle}>Detailed Subscriptions</h3>
+                            <Link href="/dashboard/subscriptions" className="btn btn-ghost btn-sm">
                                 View all <ArrowRight size={14} />
                             </Link>
                         </div>
-                        {expenses.length === 0 ? (
-                            <div className="empty-state" style={{ padding: '32px' }}>
-                                <p style={{ fontSize: '13px' }}>No expenses logged yet</p>
-                                <Link href="/dashboard/expenses/new" className="btn btn-secondary btn-sm" style={{ marginTop: '8px' }}>
-                                    Add expense
-                                </Link>
-                            </div>
-                        ) : (
-                            <div className={styles.renewalList}>
-                                {expenses.map((exp: any) => (
-                                    <div key={exp.id} className={styles.renewalItem}>
-                                        <div className="icon-wrap-sm" style={{ background: 'var(--color-blue-bg)', color: 'var(--color-blue)', fontWeight: 700 }}>
-                                            {exp.title[0]}
-                                        </div>
-                                        <div className={styles.renewalInfo}>
-                                            <div className={styles.renewalName}>{exp.title}</div>
-                                            <div style={{ fontSize: '11px', color: 'var(--color-text-tertiary)' }}>{exp.category}</div>
-                                        </div>
-                                        <div className={styles.renewalRight}>
-                                            <div className={styles.renewalCost}>{formatCurrency(exp.amount, exp.currency)}</div>
-                                            <div style={{ fontSize: '11px', color: 'var(--color-text-tertiary)' }}>
-                                                {format(parseISO(exp.expense_date), 'MMM d')}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                        <div className="table-wrapper" style={{ border: 'none', borderRadius: 0, marginTop: 'var(--space-4)' }}>
+                            <table className="table">
+                                <thead>
+                                    <tr>
+                                        <th>App / Service</th>
+                                        <th>Cost</th>
+                                        <th>Billing</th>
+                                        <th>Renewal Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {activeSubs.slice(0, 5).map(sub => (
+                                        <tr key={sub.id}>
+                                            <td>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                    {sub.logo_url ? (
+                                                        <img src={sub.logo_url} alt={sub.name} width={28} height={28} style={{ borderRadius: 8, objectFit: 'contain', border: '1px solid var(--color-border)', background: 'var(--color-bg-tertiary)', padding: 2 }} />
+                                                    ) : (
+                                                        <div className="icon-wrap-sm" style={{ background: 'var(--color-accent-light)', color: 'var(--color-accent)', fontWeight: 800, fontSize: 13 }}>
+                                                            {sub.name?.[0]?.toUpperCase() || '?'}
+                                                        </div>
+                                                    )}
+                                                    <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--color-text-primary)' }}>{sub.name}</span>
+                                                </div>
+                                            </td>
+                                            <td><span style={{ fontWeight: 700 }}>{formatCurrency(sub.cost, sub.currency)}</span></td>
+                                            <td><span style={{ fontSize: '12px', color: 'var(--color-text-secondary)', textTransform: 'capitalize' }}>{sub.billing_cycle}</span></td>
+                                            <td>
+                                                <div style={{ fontSize: '13px', fontWeight: 600 }}>{format(parseISO(sub.renewal_date), 'MMM d, yyyy')}</div>
+                                            </td>
+                                            <td>
+                                                <span className={getStatusBadge(sub.status)} style={{ textTransform: 'capitalize' }}>
+                                                    {sub.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -12,9 +12,10 @@ import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface SidebarProps {
     profile?: Profile | null;
+    onToggleNotifications?: () => void;
 }
 
-export default function Sidebar({ profile }: SidebarProps) {
+export default function Sidebar({ profile, onToggleNotifications }: SidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
     const supabase = createClient();
@@ -72,10 +73,19 @@ export default function Sidebar({ profile }: SidebarProps) {
                     <Settings size={18} />
                     {t('nav_settings')}
                 </Link>
-                <Link href="/dashboard/notifications" className={`sidebar-link ${pathname.startsWith('/dashboard/notifications') ? 'active' : ''}`}>
-                    <Bell size={18} />
-                    {t('nav_notifications')}
-                </Link>
+                <div
+                    className={`sidebar-link ${pathname.startsWith('/dashboard/notifications') ? 'active' : ''}`}
+                    onClick={onToggleNotifications}
+                    style={{ cursor: 'pointer' }}
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Bell size={18} />
+                            {t('nav_notifications')}
+                        </div>
+                        <div style={{ background: 'var(--color-accent)', width: 6, height: 6, borderRadius: '50%' }} />
+                    </div>
+                </div>
             </div>
 
             {/* Language Toggle */}
