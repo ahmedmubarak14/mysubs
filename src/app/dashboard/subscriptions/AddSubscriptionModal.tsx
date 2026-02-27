@@ -9,6 +9,7 @@ import { APP_CATALOG, getLogoUrl, AppEntry } from '@/lib/appCatalog';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import type { Subscription, Profile } from '@/types';
 import { addMonths, addYears, addDays, format } from 'date-fns';
+import DatePicker from '@/components/DatePicker';
 
 interface Props {
     onClose: () => void;
@@ -403,38 +404,33 @@ export default function AddSubscriptionModal({ onClose, subscription, teamMember
                                 </div>
 
                                 {/* ── Dates ── */}
-                                <div className="form-group">
-                                    <label className="form-label">Start Date</label>
-                                    <input
-                                        className="form-input"
-                                        type="date"
-                                        value={form.start_date}
-                                        onChange={e => { set('start_date', e.target.value); setRenewalEdited(false); }}
-                                    />
-                                </div>
+                                <DatePicker
+                                    value={form.start_date}
+                                    onChange={v => { set('start_date', v); setRenewalEdited(false); }}
+                                    label="Start Date"
+                                    placeholder="Select start date"
+                                />
 
-                                <div className="form-group">
-                                    <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span>Renewal Date</span>
-                                        {!renewalEdited && form.start_date && (
+                                <DatePicker
+                                    value={form.renewal_date}
+                                    onChange={v => { set('renewal_date', v); if (v !== calcRenewalDate(form.start_date, form.billing_cycle)) setRenewalEdited(true); }}
+                                    label="Renewal Date"
+                                    placeholder="Select renewal date"
+                                    badge={
+                                        !renewalEdited && form.start_date ? (
                                             <span style={{ fontSize: 10, background: 'var(--color-green-bg)', color: 'var(--color-green)', padding: '1px 6px', borderRadius: 10, fontWeight: 600 }}>
                                                 Auto-calculated
                                             </span>
-                                        )}
-                                    </label>
-                                    <input
-                                        className="form-input"
-                                        type="date"
-                                        value={form.renewal_date}
-                                        onChange={e => { set('renewal_date', e.target.value); setRenewalEdited(true); }}
-                                        required
-                                    />
-                                    {!renewalEdited && form.start_date && (
-                                        <span className="form-hint" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                            <Info size={11} /> Based on start date + {form.billing_cycle} cycle. Edit to override.
-                                        </span>
-                                    )}
-                                </div>
+                                        ) : undefined
+                                    }
+                                    hint={
+                                        !renewalEdited && form.start_date ? (
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--color-text-tertiary)' }}>
+                                                <Info size={11} /> Based on start date + {form.billing_cycle} cycle. Edit to override.
+                                            </span>
+                                        ) : undefined
+                                    }
+                                />
 
                                 {/* Owner */}
                                 <div className="form-group">
