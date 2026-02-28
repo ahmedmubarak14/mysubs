@@ -105,106 +105,107 @@ export default function TeamClient({ members, subscriptions, currentProfile, org
                     ))}
                 </div>
 
-                {/* Member cards */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
-                    {members.map(member => {
-                        const stats = getMemberStats(member.id);
-                        const initials = member.full_name?.split(' ').map(n => n?.[0] || '').join('').toUpperCase().slice(0, 2) || member.email?.[0]?.toUpperCase() || '?';
-                        const isYou = member.id === currentProfile?.id;
-                        return (
-                            <div key={member.id} className="card" style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 20, background: 'rgba(255, 255, 255, 0.45)', overflow: 'hidden' }}>
-                                {/* Decorative Glow */}
-                                <div style={{ position: 'absolute', top: -30, left: -30, width: 120, height: 120, background: member.id === currentProfile?.id ? 'var(--color-purple)' : 'var(--color-accent)', filter: 'blur(50px)', opacity: 0.15, pointerEvents: 'none' }} />
-
-                                {/* Header */}
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                                    <div style={{
-                                        width: 52, height: 52, borderRadius: 'var(--radius-xl)',
-                                        background: 'linear-gradient(135deg, var(--color-accent), var(--color-primary))',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        color: '#fff', fontWeight: 700, fontSize: 18, flexShrink: 0,
-                                        boxShadow: 'var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.4)',
-                                        position: 'relative'
-                                    }}>
-                                        {initials}
-                                        {isAdmin && member.role === 'admin' && (
-                                            <div style={{ position: 'absolute', bottom: -4, right: -4, background: 'var(--color-bg)', borderRadius: '50%', padding: 2 }}>
-                                                <div style={{ background: 'var(--color-purple-bg)', color: 'var(--color-purple)', borderRadius: '50%', padding: 3, display: 'flex' }}>
-                                                    <Shield size={10} />
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div style={{ flex: 1, minWidth: 0, zIndex: 1 }}>
-                                        <div style={{ fontWeight: 800, fontSize: 16, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-text-primary)' }}>
-                                            {member.full_name || member.email?.split('@')[0] || 'Unknown'}
-                                            {isYou && <span style={{ fontSize: 10, background: 'var(--color-purple-bg)', color: 'var(--color-purple)', padding: '2px 6px', borderRadius: 4, fontWeight: 700, letterSpacing: '0.05em' }}>{t('team_you_badge')}</span>}
-                                        </div>
-                                        <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, marginTop: 4 }}>
-                                            {member.role === 'admin' ? t('team_role_admin_display') : member.role === 'manager' ? t('team_role_manager_display') : t('team_role_member_display')}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Body / Stats Container */}
-                                <div style={{ display: 'flex', gap: 12, zIndex: 1, marginTop: 'auto' }}>
-                                    {/* Tools Owned Box inner glass */}
-                                    <div style={{ flex: 1, background: 'rgba(255,255,255,0.5)', padding: 12, borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.7)', display: 'flex', flexDirection: 'column', gap: 6, boxShadow: 'inset 0 1px 0 rgba(255,255,255,1)' }}>
-                                        <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('team_tools_label')}</div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                            <span style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-primary)' }}>{stats.subsCount}</span>
-                                            {stats.subsCount > 0 && (
-                                                <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                    {subscriptions.filter(s => s.owner_id === member.id).slice(0, 3).map((sub, i) => (
-                                                        <div key={sub.id || `sub-${i}`} style={{
-                                                            width: 24, height: 24, borderRadius: 6,
-                                                            background: 'rgba(255,255,255,0.8)', border: '1px solid var(--color-border-glass)',
-                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                            marginLeft: i > 0 ? -8 : 0, zIndex: 3 - i,
-                                                            fontSize: 10, fontWeight: 800, color: 'var(--color-primary)',
-                                                            boxShadow: 'var(--shadow-xs)', overflow: 'hidden'
-                                                        }}>
-                                                            {sub.logo_url ? <img src={sub.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 3 }} /> : (sub.name?.[0] || '?')}
+                {/* Member Table */}
+                <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                    <div className="table-wrapper" style={{ border: 'none', borderRadius: 0 }}>
+                        <table className="table">
+                            <thead>
+                                <tr>
+                                    <th>User Name</th>
+                                    <th>Role</th>
+                                    <th>Apps Managed</th>
+                                    <th>Monthly Spend Impact</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {members.map(member => {
+                                    const stats = getMemberStats(member.id);
+                                    const initials = member.full_name?.split(' ').map(n => n?.[0] || '').join('').toUpperCase().slice(0, 2) || member.email?.[0]?.toUpperCase() || '?';
+                                    const isYou = member.id === currentProfile?.id;
+                                    return (
+                                        <tr key={member.id}>
+                                            <td data-label="User Name">
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                                    <div style={{
+                                                        width: 40, height: 40, borderRadius: '50%',
+                                                        background: isYou ? 'var(--color-purple-bg)' : 'var(--color-bg-secondary)',
+                                                        color: isYou ? 'var(--color-purple)' : 'var(--color-text-secondary)',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        fontWeight: 800, fontSize: 15, flexShrink: 0
+                                                    }}>
+                                                        {initials}
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ fontWeight: 600, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                            {member.full_name || member.email?.split('@')[0] || 'Unknown'}
+                                                            {isYou && <span className="badge badge-purple" style={{ fontSize: 10, padding: '2px 6px' }}>{t('team_you_badge')}</span>}
                                                         </div>
-                                                    ))}
+                                                        {member.full_name && <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 2 }}>{member.email}</div>}
+                                                    </div>
                                                 </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Monthly Impact inner glass */}
-                                    <div style={{ flex: 1, background: 'rgba(255,255,255,0.5)', padding: 12, borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.7)', display: 'flex', flexDirection: 'column', gap: 6, boxShadow: 'inset 0 1px 0 rgba(255,255,255,1)' }}>
-                                        <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('team_spend_label')}</div>
-                                        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-                                            <span style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-primary)' }}>${stats.totalMonthly.toFixed(0)}</span>
-                                            <span style={{ fontSize: 11, color: 'var(--color-green)', fontWeight: 700, display: 'flex', alignItems: 'center', background: 'var(--color-green-bg)', padding: '2px 6px', borderRadius: 4 }}>
-                                                <TrendingUp size={10} style={{ marginRight: 4 }} /> +{(Math.random() * 5).toFixed(1)}%
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })}
-                    {/* Add Team Member Card */}
-                    {isAdmin && (
-                        <div onClick={() => setShowInvite(true)} style={{
-                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                            border: '2px dashed rgba(134, 77, 179, 0.3)', background: 'rgba(255, 255, 255, 0.2)',
-                            backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', cursor: 'pointer',
-                            minHeight: 180, gap: 12, transition: 'all 0.2s', borderRadius: 'var(--radius-xl)'
-                        }}
-                            onMouseOver={e => { e.currentTarget.style.borderColor = 'var(--color-accent)'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.45)'; }}
-                            onMouseOut={e => { e.currentTarget.style.borderColor = 'rgba(134, 77, 179, 0.3)'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'; }}>
-                            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-accent)', boxShadow: 'var(--shadow-xs)' }}>
-                                <Users size={24} />
-                            </div>
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontWeight: 700, fontSize: 15 }}>{t('team_add_member_card')}</div>
-                                <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 4 }}>{t('team_add_member_desc')}</div>
-                            </div>
-                        </div>
-                    )}
+                                            </td>
+                                            <td data-label="Role">
+                                                <span className={`badge ${member.role === 'admin' ? 'badge-purple' : member.role === 'manager' ? 'badge-blue' : 'badge-gray'}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                                    {roleIcon(member.role)}
+                                                    {member.role === 'admin' ? t('team_role_admin_display') : member.role === 'manager' ? t('team_role_manager_display') : t('team_role_member_display')}
+                                                </span>
+                                            </td>
+                                            <td data-label="Apps Managed">
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                    <span style={{ fontWeight: 700, fontSize: 15 }}>{stats.subsCount}</span>
+                                                    {stats.subsCount > 0 && (
+                                                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                            {subscriptions.filter(s => s.owner_id === member.id).slice(0, 3).map((sub, i) => {
+                                                                const fallbackDomain = `${sub.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
+                                                                const computedLogoUrl = sub.logo_url || `https://www.google.com/s2/favicons?domain=${fallbackDomain}&sz=128`;
+                                                                return (
+                                                                    <div key={sub.id || `sub-${i}`} style={{
+                                                                        width: 26, height: 26, borderRadius: 6,
+                                                                        background: 'var(--color-bg)', border: '1px solid var(--color-border)',
+                                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                        marginLeft: i > 0 ? -10 : 0, zIndex: 3 - i,
+                                                                        fontSize: 10, fontWeight: 800, color: 'var(--color-text-secondary)',
+                                                                        overflow: 'hidden'
+                                                                    }}>
+                                                                        <img src={computedLogoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 3 }} onError={(e) => {
+                                                                            const target = e.currentTarget; const parent = target.parentElement;
+                                                                            if (parent) { parent.innerHTML = `<div style="width: 100%; height: 100%; background: var(--color-bg-secondary); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--color-text-secondary); font-weight: 800">${sub.name?.[0] || '?'}</div>`; }
+                                                                        }} />
+                                                                    </div>
+                                                                )
+                                                            })}
+                                                            {stats.subsCount > 3 && (
+                                                                <div style={{ width: 26, height: 26, borderRadius: 6, background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: -10, zIndex: 0, fontSize: 10, fontWeight: 700, color: 'var(--color-text-tertiary)' }}>
+                                                                    +{stats.subsCount - 3}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td data-label="Monthly Spend Impact">
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                    <div style={{ fontWeight: 700, fontSize: 15 }}>${stats.totalMonthly.toFixed(0)} <span style={{ fontSize: 13, color: 'var(--color-text-tertiary)', fontWeight: 500 }}>/mo</span></div>
+                                                    {stats.totalMonthly > 0 && (
+                                                        <span style={{ fontSize: 11, color: 'var(--color-green)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', background: 'var(--color-green-bg)', padding: '2px 6px', borderRadius: 4 }}>
+                                                            <TrendingUp size={10} style={{ marginRight: 4 }} /> +{(Math.random() * 5).toFixed(1)}%
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                                {members.length === 0 && (
+                                    <tr>
+                                        <td colSpan={4} style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--color-text-tertiary)' }}>
+                                            No team members found.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 

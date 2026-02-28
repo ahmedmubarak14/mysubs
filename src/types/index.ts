@@ -41,6 +41,17 @@ export interface Subscription {
     created_at: string;
     // Joined
     owner?: Profile;
+    subscription_users?: SubscriptionUser[];
+}
+
+export interface SubscriptionUser {
+    id: string;
+    subscription_id: string;
+    profile_id: string;
+    role: 'user' | 'manager' | 'admin';
+    created_at: string;
+    // Joined
+    profile?: Profile;
 }
 
 export interface Expense {

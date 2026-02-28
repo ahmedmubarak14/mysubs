@@ -431,8 +431,10 @@ p {
 
 .table-wrapper {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-xl);
+  width: 100%;
 }
 
 .table {
@@ -1421,4 +1423,46 @@ p {
 [dir="rtl"] .form-hint,
 [dir="rtl"] .form-error {
   text-align: right;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Mobile Responsive Utilities
+   ───────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .main-content {
+    padding-top: calc(var(--topbar-height) + var(--space-4)) !important;
+  }
+
+  .page-content {
+    padding: 0 var(--space-4) var(--space-4) var(--space-4) !important;
+  }
+
+  .stat-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-content {
+    padding: 0 var(--space-2) var(--space-4) var(--space-2) !important;
+  }
+
+  .filter-bar {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .card {
+    padding: var(--space-4) !important;
+  }
 }

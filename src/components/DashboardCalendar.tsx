@@ -106,27 +106,37 @@ export default function DashboardCalendar({ subscriptions }: Props) {
                         }}>
                             <div style={{ fontSize: '11px', fontWeight: isCurrentDay ? 700 : 500, color: isCurrentDay ? 'var(--color-accent)' : 'var(--color-text-secondary)', marginBottom: 2 }}>{format(day, 'd')}</div>
 
-                            {daysSubs.slice(0, 4).map(sub => (
-                                <Link href={`/dashboard/subscriptions/detail?id=${sub.id}`} key={sub.id} style={{
-                                    background: `rgba(255, 255, 255, 0.8)`,
-                                    border: `1px solid ${STATUS_COLORS[sub.status]}40`,
-                                    borderLeft: `2px solid ${STATUS_COLORS[sub.status]}`,
-                                    padding: '2px',
-                                    borderRadius: '8px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    textDecoration: 'none'
-                                }} title={`${sub.name} - ${formatCurrency(sub.cost, sub.currency)}`}>
-                                    {sub.logo_url ? (
-                                        <img src={sub.logo_url} alt={sub.name} style={{ width: 16, height: 16, borderRadius: '4px', objectFit: 'contain' }} />
-                                    ) : (
-                                        <div style={{ width: 16, height: 16, borderRadius: '4px', background: STATUS_COLORS[sub.status], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', color: '#fff', fontWeight: 800 }}>
-                                            {sub.name?.[0] || '?'}
-                                        </div>
-                                    )}
-                                </Link>
-                            ))}
+                            {daysSubs.slice(0, 4).map(sub => {
+                                const fallbackDomain = `${sub.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
+                                const computedLogoUrl = sub.logo_url || `https://www.google.com/s2/favicons?domain=${fallbackDomain}&sz=128`;
+
+                                return (
+                                    <Link href={`/dashboard/subscriptions/detail?id=${sub.id}`} key={sub.id}
+                                        style={{
+                                            background: `linear-gradient(135deg, ${STATUS_COLORS[sub.status]}15, transparent)`,
+                                            border: `1px solid ${STATUS_COLORS[sub.status]}30`,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            padding: '6px', borderRadius: '8px',
+                                            transition: 'all 0.2s cubic-bezier(0.25, 1.0, 0.5, 1.0)',
+                                            textDecoration: 'none', position: 'relative', zIndex: 10,
+                                            width: '28px', height: '28px'
+                                        }}
+                                        title={`${sub.name} — ${sub.cost}`}
+                                        onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+                                        onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+                                    >
+                                        <img src={computedLogoUrl} alt={sub.name} style={{ width: 16, height: 16, borderRadius: 3, objectFit: 'contain' }}
+                                            onError={(e) => {
+                                                // If even the fallback fails, replace the image node with the initials div
+                                                const target = e.currentTarget;
+                                                const parent = target.parentElement;
+                                                if (parent) {
+                                                    parent.innerHTML = `<div style="width: 16px; height: 16px; border-radius: 3px; background: ${STATUS_COLORS[sub.status]}; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #fff; font-weight: 800">${sub.name?.[0] || '?'}</div>`;
+                                                }
+                                            }} />
+                                    </Link>
+                                );
+                            })}
                             {daysSubs.length > 4 && (
                                 <div style={{ fontSize: '8px', color: 'var(--color-text-tertiary)', textAlign: 'center', marginTop: 'auto' }}>
                                     +{daysSubs.length - 4} {t('cal_more')}
