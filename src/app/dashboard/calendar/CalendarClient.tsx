@@ -9,6 +9,7 @@ import { CURRENCIES } from '@/types';
 import Topbar from '@/components/Topbar';
 import { useNotifications } from '@/components/NotificationsContext';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { APP_CATALOG, getLogoUrl } from '@/lib/appCatalog';
 
 interface Sub {
     id: string;
@@ -115,8 +116,9 @@ export default function CalendarClient({ subscriptions }: { subscriptions: Sub[]
                                         <div className="calendar-day-number">{format(day, 'd')}</div>
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(28px, 1fr))', gap: '4px', padding: '0 4px', paddingBottom: '4px' }}>
                                             {daysSubs.slice(0, 8).map(sub => {
-                                                const fallbackDomain = `${sub.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
-                                                const computedLogoUrl = sub.logo_url || `https://logo.clearbit.com/${fallbackDomain}`;
+                                                const catalogEntry = APP_CATALOG.find(c => c.name.toLowerCase() === sub.name.toLowerCase());
+                                                const fallbackDomain = catalogEntry ? catalogEntry.domain : `${sub.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
+                                                const computedLogoUrl = sub.logo_url || getLogoUrl(fallbackDomain);
 
                                                 return (
                                                     <div key={sub.id}

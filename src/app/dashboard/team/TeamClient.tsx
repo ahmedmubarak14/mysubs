@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Users, Shield, Eye, BarChart2, X, Mail, TrendingUp, Upload, Trash2, Edit2, CheckSquare } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { createClient } from '@/lib/supabase/client';
+import { APP_CATALOG, getLogoUrl } from '@/lib/appCatalog';
 import type { Profile, Subscription } from '@/types';
 import Topbar from '@/components/Topbar';
 import { useNotifications } from '@/components/NotificationsContext';
@@ -285,8 +286,9 @@ export default function TeamClient({ members, subscriptions, currentProfile, org
                                                     {stats.subsCount > 0 && (
                                                         <div style={{ display: 'flex', alignItems: 'center' }}>
                                                             {subscriptions.filter(s => s.owner_id === member.id).slice(0, 3).map((sub, i) => {
-                                                                const fallbackDomain = `${sub.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
-                                                                const computedLogoUrl = sub.logo_url || `https://logo.clearbit.com/${fallbackDomain}`;
+                                                                const catalogEntry = APP_CATALOG.find(c => c.name.toLowerCase() === sub.name.toLowerCase());
+                                                                const fallbackDomain = catalogEntry ? catalogEntry.domain : `${sub.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
+                                                                const computedLogoUrl = sub.logo_url || getLogoUrl(fallbackDomain);
                                                                 return (
                                                                     <div key={sub.id || `sub-${i}`} style={{
                                                                         width: 26, height: 26, borderRadius: 6,

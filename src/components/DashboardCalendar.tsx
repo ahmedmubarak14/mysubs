@@ -6,6 +6,7 @@ import { ar } from 'date-fns/locale';
 import Link from 'next/link';
 import { CURRENCIES, type Subscription } from '@/types';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { APP_CATALOG, getLogoUrl } from '@/lib/appCatalog';
 
 const STATUS_KEYS: Record<string, string> = {
     active: 'cal_status_active',
@@ -107,8 +108,9 @@ export default function DashboardCalendar({ subscriptions }: Props) {
                             <div style={{ fontSize: '11px', fontWeight: isCurrentDay ? 700 : 500, color: isCurrentDay ? 'var(--color-accent)' : 'var(--color-text-secondary)', marginBottom: 2 }}>{format(day, 'd')}</div>
 
                             {daysSubs.slice(0, 4).map(sub => {
-                                const fallbackDomain = `${sub.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
-                                const computedLogoUrl = sub.logo_url || `https://logo.clearbit.com/${fallbackDomain}`;
+                                const catalogEntry = APP_CATALOG.find(c => c.name.toLowerCase() === sub.name.toLowerCase());
+                                const fallbackDomain = catalogEntry ? catalogEntry.domain : `${sub.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
+                                const computedLogoUrl = sub.logo_url || getLogoUrl(fallbackDomain);
 
                                 return (
                                     <Link href={`/dashboard/subscriptions/detail?id=${sub.id}`} key={sub.id}
