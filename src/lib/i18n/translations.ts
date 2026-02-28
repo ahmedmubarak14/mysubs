@@ -41,6 +41,20 @@ const en = {
     dash_add_expense: 'Add expense',
     dash_add_subs: 'Add subscriptions to see your spend chart',
 
+    // Categories
+    cat_Design: 'Design',
+    cat_Development: 'Development',
+    cat_Marketing: 'Marketing',
+    cat_Communication: 'Communication',
+    cat_Analytics: 'Analytics',
+    cat_Finance: 'Finance',
+    cat_HR: 'HR',
+    cat_Operations: 'Operations',
+    cat_Security: 'Security',
+    cat_Cloud: 'Cloud',
+    'cat_AI & ML': 'AI & ML',
+    cat_Other: 'Other',
+
     // Subscriptions
     subs_title: 'Subscriptions',
     subs_import_csv: 'Import CSV',
@@ -449,6 +463,19 @@ const ar: typeof en = {
     dash_no_expenses: 'لم يتم تسجيل أي مصروفات بعد',
     dash_add_expense: 'إضافة مصروف',
     dash_add_subs: 'أضف اشتراكات لرؤية مخطط إنفاقك',
+
+    cat_Design: 'التصميم',
+    cat_Development: 'التطوير',
+    cat_Marketing: 'التسويق',
+    cat_Communication: 'التواصل',
+    cat_Analytics: 'التحليلات',
+    cat_Finance: 'المالية',
+    cat_HR: 'الموارد البشرية',
+    cat_Operations: 'العمليات',
+    cat_Security: 'الأمان',
+    cat_Cloud: 'الحوسبة السحابية',
+    'cat_AI & ML': 'الذكاء الاصطناعي',
+    cat_Other: 'أخرى',
 
     subs_title: 'الاشتراكات',
     subs_import_csv: 'استيراد CSV',

@@ -33,7 +33,7 @@ const STATUS_COLORS: Record<string, string> = {
     trial: 'var(--color-blue)',
 };
 
-const PIE_COLORS = ['#864DB3', '#1F0434', '#DDFF55', '#2563EB', '#16A34A', '#D97706', '#DC2626'];
+const PIE_COLORS = ['#864DB3', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6', '#6366F1'];
 
 function formatCurrency(amount: number, currency = 'USD') {
     const sym = CURRENCIES.find(c => c.code === currency)?.symbol ?? '$';
@@ -102,8 +102,8 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
             const monthCost = s.billing_cycle === 'yearly' ? s.cost / 12 : s.billing_cycle === 'quarterly' ? s.cost / 3 : s.cost;
             map[s.category] = (map[s.category] ?? 0) + monthCost;
         });
-        return Object.entries(map).map(([name, value]) => ({ name, value: Math.round(value) })).sort((a, b) => b.value - a.value);
-    }, [activeSubs]);
+        return Object.entries(map).map(([name, value]) => ({ name: (t(`cat_${name}` as any) || name) as string, value: Math.round(value) })).sort((a, b) => b.value - a.value);
+    }, [activeSubs, t]);
 
     const orgName = profile?.full_name ? `${profile.full_name.split(' ')[0]} ${t('dash_workspace')}` : t('dash_workspace');
 

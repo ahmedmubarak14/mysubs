@@ -17,7 +17,7 @@ export default function TeamPage() {
             if (orgId) {
                 const [m, s] = await Promise.all([
                     supabase.from('profiles').select('*').eq('org_id', orgId).order('full_name'),
-                    supabase.from('subscriptions').select('owner_id, cost, billing_cycle, seats').eq('org_id', orgId).neq('status', 'cancelled'),
+                    supabase.from('subscriptions').select('owner_id, cost, billing_cycle, seats, name, logo_url').eq('org_id', orgId).neq('status', 'cancelled'),
                 ]);
                 members = m.data ?? [];
                 subscriptions = s.data ?? [];
