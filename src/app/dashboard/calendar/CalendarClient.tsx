@@ -65,7 +65,6 @@ export default function CalendarClient({ subscriptions }: { subscriptions: Sub[]
         'cal_day_sun', 'cal_day_mon', 'cal_day_tue', 'cal_day_wed',
         'cal_day_thu', 'cal_day_fri', 'cal_day_sat'
     ];
-    const displayDayKeys = lang === 'ar' ? [...DAY_KEYS].reverse() : DAY_KEYS;
 
     return (
         <div>
@@ -95,7 +94,7 @@ export default function CalendarClient({ subscriptions }: { subscriptions: Sub[]
                     <div className="card" style={{ padding: 'var(--space-4)' }}>
                         {/* Day headers */}
                         <div className="calendar-grid" style={{ marginBottom: 'var(--space-2)', display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8, direction: lang === 'ar' ? 'rtl' : 'ltr' }}>
-                            {displayDayKeys.map(key => (
+                            {DAY_KEYS.map(key => (
                                 <div key={key} style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-text-tertiary)', textAlign: 'center' }}>
                                     {t(key)}
                                 </div>

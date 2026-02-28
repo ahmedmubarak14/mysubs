@@ -62,7 +62,6 @@ export default function DashboardCalendar({ subscriptions }: Props) {
         });
         return map;
     }, [subscriptions]);
-    const displayDayKeys = lang === 'ar' ? [...DAY_KEYS].reverse() : DAY_KEYS;
 
     return (
         <div className="card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -78,7 +77,7 @@ export default function DashboardCalendar({ subscriptions }: Props) {
             </div>
 
             <div className="calendar-grid" style={{ marginBottom: 2, display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, direction: lang === 'ar' ? 'rtl' : 'ltr' }}>
-                {displayDayKeys.map(key => (
+                {DAY_KEYS.map(key => (
                     <div key={key} style={{ fontSize: '10px', fontWeight: 700, color: 'var(--color-text-tertiary)', textAlign: 'center', textTransform: 'uppercase', padding: '4px 0' }}>
                         {t(key)}
                     </div>
