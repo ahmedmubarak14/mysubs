@@ -18,6 +18,7 @@ import styles from './dashboard.module.css';
 import DashboardCalendar from '@/components/DashboardCalendar';
 import Topbar from '@/components/Topbar';
 import { useNotifications } from '@/components/NotificationsContext';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface Props {
     profile: Profile | null;
@@ -55,6 +56,7 @@ function getDaysUntilRenewal(renewalDate: string) {
 
 export default function DashboardClient({ profile, subscriptions, expenses }: Props) {
     const { openPanel } = useNotifications();
+    const { t } = useLanguage();
     const activeSubs = subscriptions.filter(s => s.status !== 'cancelled');
 
     // Stat calculations
@@ -103,13 +105,13 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
         return Object.entries(map).map(([name, value]) => ({ name, value: Math.round(value) })).sort((a, b) => b.value - a.value);
     }, [activeSubs]);
 
-    const orgName = profile?.full_name ? `${profile.full_name.split(' ')[0]}'s Workspace` : 'Your Workspace';
+    const orgName = profile?.full_name ? `${profile.full_name.split(' ')[0]} ${t('dash_workspace')}` : t('dash_workspace');
 
     return (
         <div>
-            <Topbar title="Dashboard" onToggleNotifications={openPanel}>
+            <Topbar title={t('nav_dashboard')} onToggleNotifications={openPanel}>
                 <Link href="/dashboard/subscriptions" className="btn btn-primary btn-sm">
-                    + Add Subscription
+                    {t('dash_add_subscription')}
                 </Link>
             </Topbar>
 
@@ -118,10 +120,14 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
                 <div className={styles.welcomeRow}>
                     <div>
                         <h1 className={styles.welcomeTitle}>
-                            Good {new Date().getHours() < 12 ? 'morning' : 'afternoon'},{' '}
-                            {profile?.full_name?.split(' ')[0] ?? 'there'} 👋
+                            {new Date().getHours() < 12 ? t('dash_good_morning') : new Date().getHours() < 18 ? t('dash_good_afternoon') : t('dash_good_evening')},{' '}
+                            {profile?.full_name?.split(' ')[0] ?? ''} 👋
                         </h1>
-                        <p className={styles.welcomeSub}>{orgName} · {activeSubs.length} active subscriptions</p>
+                        <p className={styles.welcomeSub} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                            <span>{orgName}</span>
+                            <span style={{ fontSize: 10, opacity: 0.5 }}>●</span>
+                            <span>{activeSubs.length} {t('dash_active_subs')}</span>
+                        </p>
                     </div>
                 </div>
 
@@ -133,12 +139,12 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
                             <div className="stat-card-icon" style={{ background: 'rgba(134, 77, 179, 0.15)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)', width: 40, height: 40, marginBottom: 0 }}>
                                 <DollarSign size={20} color="var(--color-purple)" />
                             </div>
-                            <div className="stat-card-label" style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>Monthly Spend</div>
+                            <div className="stat-card-label" style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>{t('dash_monthly_spend')}</div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
                             <div>
                                 <div className="stat-card-value">{formatCurrency(totalMonthly)}</div>
-                                <div className="stat-card-subtext" style={{ color: 'var(--color-green)', fontWeight: 600 }}>+4.2% from last month</div>
+                                <div className="stat-card-subtext" style={{ color: 'var(--color-green)', fontWeight: 600 }}>+4.2% {t('dash_from_last_month')}</div>
                             </div>
                             <div style={{ width: 80, height: 40, opacity: 0.8 }}>
                                 <ResponsiveContainer width="100%" height="100%">
@@ -156,12 +162,12 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
                             <div className="stat-card-icon" style={{ background: 'rgba(52, 199, 89, 0.15)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)', width: 40, height: 40, marginBottom: 0 }}>
                                 <CreditCard size={20} color="var(--color-green)" />
                             </div>
-                            <div className="stat-card-label" style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>Active Subscriptions</div>
+                            <div className="stat-card-label" style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>{t('dash_active_subscriptions')}</div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
                             <div>
                                 <div className="stat-card-value">{activeSubs.filter(s => s.status === 'active').length}</div>
-                                <div className="stat-card-subtext" style={{ fontWeight: 600 }}>{subscriptions.filter(s => s.status === 'trial').length} in trial</div>
+                                <div className="stat-card-subtext" style={{ fontWeight: 600 }}>{subscriptions.filter(s => s.status === 'trial').length} {t('dash_in_trial')}</div>
                             </div>
                             <div style={{ width: 80, height: 40, opacity: 0.8 }}>
                                 <ResponsiveContainer width="100%" height="100%">
@@ -179,12 +185,12 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
                             <div className="stat-card-icon" style={{ background: 'rgba(255, 149, 0, 0.15)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)', width: 40, height: 40, marginBottom: 0 }}>
                                 <AlertTriangle size={20} color="var(--color-orange)" />
                             </div>
-                            <div className="stat-card-label" style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>Renewing Soon</div>
+                            <div className="stat-card-label" style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>{t('dash_renewing_soon')}</div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
                             <div>
                                 <div className="stat-card-value">{upcomingRenewals.length}</div>
-                                <div className="stat-card-subtext" style={{ fontWeight: 600 }}>within the next 30 days</div>
+                                <div className="stat-card-subtext" style={{ fontWeight: 600 }}>{t('dash_within_30')}</div>
                             </div>
                         </div>
                     </div>
@@ -195,12 +201,12 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
                             <div className="stat-card-icon" style={{ background: 'rgba(0, 122, 255, 0.15)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)', width: 40, height: 40, marginBottom: 0 }}>
                                 <TrendingUp size={20} color="var(--color-blue)" />
                             </div>
-                            <div className="stat-card-label" style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>Annual Spend</div>
+                            <div className="stat-card-label" style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>{t('dash_annual_spend')}</div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
                             <div>
                                 <div className="stat-card-value">{formatCurrency(totalMonthly * 12)}</div>
-                                <div className="stat-card-subtext" style={{ fontWeight: 600 }}>projected for this year</div>
+                                <div className="stat-card-subtext" style={{ fontWeight: 600 }}>{t('dash_projected')}</div>
                             </div>
                         </div>
                     </div>
@@ -211,8 +217,8 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
                     {/* Area Chart */}
                     <div className={`card ${styles.spendChart}`}>
                         <div className={styles.cardHeader}>
-                            <h3 className={styles.cardTitle}>Monthly Spend</h3>
-                            <span className="badge badge-green" style={{ fontSize: '11px' }}>Last 6 months</span>
+                            <h3 className={styles.cardTitle}>{t('dash_monthly_spend_chart')}</h3>
+                            <span className="badge badge-green" style={{ fontSize: '11px' }}>{t('dash_last_6mo')}</span>
                         </div>
                         {totalMonthly > 0 ? (
                             <ResponsiveContainer width="100%" height={220}>
@@ -226,13 +232,13 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
                                     <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                                     <XAxis dataKey="month" tick={{ fontSize: 12, fill: 'var(--color-text-tertiary)' }} axisLine={false} tickLine={false} />
                                     <YAxis tick={{ fontSize: 12, fill: 'var(--color-text-tertiary)' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} />
-                                    <Tooltip formatter={(v: any) => [`$${Number(v).toFixed(0)}`, 'Spend']} contentStyle={{ borderRadius: '10px', border: '1.5px solid var(--color-border)', fontSize: 13 }} />
+                                    <Tooltip formatter={(v: any) => [`$${Number(v).toFixed(0)}`, t('team_spend_label')]} contentStyle={{ borderRadius: '10px', border: '1.5px solid var(--color-border)', fontSize: 13 }} />
                                     <Area type="monotone" dataKey="spend" stroke="#864DB3" strokeWidth={2.5} fill="url(#spendGrad)" dot={false} activeDot={{ r: 5, fill: '#864DB3' }} />
                                 </AreaChart>
                             </ResponsiveContainer>
                         ) : (
                             <div className="empty-state" style={{ padding: '40px' }}>
-                                <p>Add subscriptions to see your spend chart</p>
+                                <p>{t('dash_add_subs')}</p>
                             </div>
                         )}
                     </div>
@@ -240,7 +246,7 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
                     {/* Pie Chart */}
                     <div className={`card ${styles.categoryChart}`}>
                         <div className={styles.cardHeader}>
-                            <h3 className={styles.cardTitle}>By Category</h3>
+                            <h3 className={styles.cardTitle}>{t('dash_by_category')}</h3>
                         </div>
                         {categoryData.length > 0 ? (
                             <ResponsiveContainer width="100%" height={220}>
@@ -251,13 +257,13 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
                                             <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                                         ))}
                                     </Pie>
-                                    <Tooltip formatter={(v: any) => [`$${v}`, 'Monthly']} contentStyle={{ borderRadius: '10px', border: '1.5px solid var(--color-border)', fontSize: 13 }} />
+                                    <Tooltip formatter={(v: any) => [`$${v}`, t('subs_monthly')]} contentStyle={{ borderRadius: '10px', border: '1.5px solid var(--color-border)', fontSize: 13 }} />
                                     <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
                                 </PieChart>
                             </ResponsiveContainer>
                         ) : (
                             <div className="empty-state" style={{ padding: '40px' }}>
-                                <p>No categories yet</p>
+                                <p>{t('dash_no_categories')}</p>
                             </div>
                         )}
                     </div>
@@ -273,20 +279,20 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
                     {/* All Subscriptions Table */}
                     <div className="card" style={{ flex: 2, padding: 0, overflow: 'hidden' }}>
                         <div className={styles.cardHeader} style={{ padding: 'var(--space-5) var(--space-5) 0' }}>
-                            <h3 className={styles.cardTitle}>Detailed Subscriptions</h3>
+                            <h3 className={styles.cardTitle}>{t('dash_detailed_subs')}</h3>
                             <Link href="/dashboard/subscriptions" className="btn btn-ghost btn-sm">
-                                View all <ArrowRight size={14} />
+                                {t('dash_view_all')} <ArrowRight size={14} />
                             </Link>
                         </div>
                         <div className="table-wrapper" style={{ border: 'none', borderRadius: 0, marginTop: 'var(--space-4)' }}>
                             <table className="table">
                                 <thead>
                                     <tr>
-                                        <th>App / Service</th>
-                                        <th>Cost</th>
-                                        <th>Billing</th>
-                                        <th>Renewal Date</th>
-                                        <th>Status</th>
+                                        <th>{t('dash_col_app')}</th>
+                                        <th>{t('dash_col_cost')}</th>
+                                        <th>{t('dash_col_billing')}</th>
+                                        <th>{t('dash_col_renewal')}</th>
+                                        <th>{t('dash_col_status')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -305,13 +311,13 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
                                                 </div>
                                             </td>
                                             <td><span style={{ fontWeight: 700 }}>{formatCurrency(sub.cost, sub.currency)}</span></td>
-                                            <td><span style={{ fontSize: '12px', color: 'var(--color-text-secondary)', textTransform: 'capitalize' }}>{sub.billing_cycle}</span></td>
+                                            <td><span style={{ fontSize: '12px', color: 'var(--color-text-secondary)', textTransform: 'capitalize' }}>{t(('common_' + sub.billing_cycle) as any)}</span></td>
                                             <td>
                                                 <div style={{ fontSize: '13px', fontWeight: 600 }}>{format(parseISO(sub.renewal_date), 'MMM d, yyyy')}</div>
                                             </td>
                                             <td>
                                                 <span className={getStatusBadge(sub.status)} style={{ textTransform: 'capitalize' }}>
-                                                    {sub.status}
+                                                    {t(('subs_status_' + sub.status) as any) || sub.status}
                                                 </span>
                                             </td>
                                         </tr>
