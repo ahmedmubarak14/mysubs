@@ -106,28 +106,30 @@ export default function DashboardCalendar({ subscriptions }: Props) {
                         }}>
                             <div style={{ fontSize: '11px', fontWeight: isCurrentDay ? 700 : 500, color: isCurrentDay ? 'var(--color-accent)' : 'var(--color-text-secondary)', marginBottom: 2 }}>{format(day, 'd')}</div>
 
-                            {daysSubs.slice(0, 2).map(sub => (
+                            {daysSubs.slice(0, 4).map(sub => (
                                 <Link href={`/dashboard/subscriptions/detail?id=${sub.id}`} key={sub.id} style={{
                                     background: `rgba(255, 255, 255, 0.8)`,
                                     border: `1px solid ${STATUS_COLORS[sub.status]}40`,
                                     borderLeft: `2px solid ${STATUS_COLORS[sub.status]}`,
-                                    padding: '2px 4px',
-                                    borderRadius: '4px',
-                                    fontSize: '9px',
-                                    fontWeight: 600,
-                                    color: 'var(--color-text-primary)',
-                                    display: 'block',
-                                    whiteSpace: 'nowrap',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
+                                    padding: '2px',
+                                    borderRadius: '8px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
                                     textDecoration: 'none'
                                 }} title={`${sub.name} - ${formatCurrency(sub.cost, sub.currency)}`}>
-                                    {sub.name}
+                                    {sub.logo_url ? (
+                                        <img src={sub.logo_url} alt={sub.name} style={{ width: 16, height: 16, borderRadius: '4px', objectFit: 'contain' }} />
+                                    ) : (
+                                        <div style={{ width: 16, height: 16, borderRadius: '4px', background: STATUS_COLORS[sub.status], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', color: '#fff', fontWeight: 800 }}>
+                                            {sub.name?.[0] || '?'}
+                                        </div>
+                                    )}
                                 </Link>
                             ))}
-                            {daysSubs.length > 2 && (
+                            {daysSubs.length > 4 && (
                                 <div style={{ fontSize: '8px', color: 'var(--color-text-tertiary)', textAlign: 'center', marginTop: 'auto' }}>
-                                    +{daysSubs.length - 2} {t('cal_more')}
+                                    +{daysSubs.length - 4} {t('cal_more')}
                                 </div>
                             )}
                         </div>

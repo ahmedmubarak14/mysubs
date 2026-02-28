@@ -109,46 +109,43 @@ export default function CalendarClient({ subscriptions }: { subscriptions: Sub[]
                                 return (
                                     <div key={key} className={`calendar-day ${isToday(day) ? 'today' : ''}`}>
                                         <div className="calendar-day-number">{format(day, 'd')}</div>
-                                        {daysSubs.slice(0, 3).map(sub => (
-                                            <div key={sub.id}
-                                                className="calendar-event"
-                                                style={{
-                                                    background: `rgba(255, 255, 255, 0.75)`,
-                                                    backdropFilter: 'blur(16px) saturate(200%)', WebkitBackdropFilter: 'blur(16px) saturate(200%)',
-                                                    border: `1px solid rgba(255, 255, 255, 0.8)`,
-                                                    color: 'var(--color-text-primary)',
-                                                    padding: '4px 8px', display: 'flex', flexDirection: 'column', gap: 2,
-                                                    borderRadius: 'var(--radius-lg)',
-                                                    boxShadow: `0 4px 12px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,1), inset 0 0 0 1.5px ${STATUS_COLORS[sub.status]}33`,
-                                                    cursor: 'pointer', transition: 'all 0.2s cubic-bezier(0.25, 1.0, 0.5, 1.0)',
-                                                    position: 'relative', zIndex: 10,
-                                                    ...(selected?.id === sub.id ? { borderColor: STATUS_COLORS[sub.status], boxShadow: `0 4px 16px ${STATUS_COLORS[sub.status]}33, inset 0 1px 0 rgba(255,255,255,1), inset 0 0 0 1.5px ${STATUS_COLORS[sub.status]}` } : {})
-                                                }}
-                                                onClick={() => setSelected(selected?.id === sub.id ? null : sub)}
-                                                title={`${sub.name} — ${formatCurrency(sub.cost, sub.currency)}`}
-                                                onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'}
-                                                onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
-                                            >
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%' }}>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(28px, 1fr))', gap: '4px', padding: '0 4px', paddingBottom: '4px' }}>
+                                            {daysSubs.slice(0, 8).map(sub => (
+                                                <div key={sub.id}
+                                                    className="calendar-event"
+                                                    style={{
+                                                        background: `rgba(255, 255, 255, 0.75)`,
+                                                        backdropFilter: 'blur(16px) saturate(200%)', WebkitBackdropFilter: 'blur(16px) saturate(200%)',
+                                                        border: `1px solid rgba(255, 255, 255, 0.8)`,
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        borderRadius: '6px',
+                                                        width: '28px', height: '28px',
+                                                        boxShadow: `0 4px 12px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,1), inset 0 0 0 1.5px ${STATUS_COLORS[sub.status]}33`,
+                                                        cursor: 'pointer', transition: 'all 0.2s cubic-bezier(0.25, 1.0, 0.5, 1.0)',
+                                                        position: 'relative', zIndex: 10,
+                                                        ...(selected?.id === sub.id ? { borderColor: STATUS_COLORS[sub.status], boxShadow: `0 4px 16px ${STATUS_COLORS[sub.status]}33, inset 0 1px 0 rgba(255,255,255,1), inset 0 0 0 1.5px ${STATUS_COLORS[sub.status]}` } : {})
+                                                    }}
+                                                    onClick={() => setSelected(selected?.id === sub.id ? null : sub)}
+                                                    title={`${sub.name} — ${formatCurrency(sub.cost, sub.currency)}`}
+                                                    onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                                                    onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+                                                >
                                                     {sub.logo_url ? (
-                                                        <img src={sub.logo_url} alt={sub.name} style={{ width: 14, height: 14, borderRadius: 3, objectFit: 'contain' }} />
+                                                        <img src={sub.logo_url} alt={sub.name} style={{ width: 18, height: 18, borderRadius: 3, objectFit: 'contain' }} />
                                                     ) : (
-                                                        <div style={{ width: 14, height: 14, borderRadius: 3, background: STATUS_COLORS[sub.status], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, color: '#fff', fontWeight: 800 }}>
+                                                        <div style={{ width: 18, height: 18, borderRadius: 3, background: STATUS_COLORS[sub.status], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#fff', fontWeight: 800 }}>
                                                             {sub.name?.[0] || '?'}
                                                         </div>
                                                     )}
-                                                    <span style={{ fontWeight: 600, fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub.name}</span>
                                                 </div>
-                                                <div style={{ fontSize: 10, color: STATUS_COLORS[sub.status], fontWeight: 700, paddingLeft: 20 }}>
-                                                    {formatCurrency(sub.cost, sub.currency)}
+                                            ))}
+                                            {daysSubs.length > 8 && (
+                                                <div style={{ fontSize: '10px', color: 'var(--color-text-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                                                    +{daysSubs.length - 8}
                                                 </div>
-                                            </div>
-                                        ))}
-                                        {daysSubs.length > 3 && (
-                                            <div style={{ fontSize: '10px', color: 'var(--color-text-tertiary)', marginTop: 2, paddingLeft: 4 }}>
-                                                +{daysSubs.length - 3} {t('cal_more')}
-                                            </div>
-                                        )}
+                                            )}
+                                        </div>
+
                                     </div>
                                 );
                             })}

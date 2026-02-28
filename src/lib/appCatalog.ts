@@ -71,7 +71,7 @@ export const APP_CATALOG: AppEntry[] = [
 
     // AI & ML
     { name: 'ChatGPT (OpenAI)', vendor: 'OpenAI', domain: 'openai.com', category: 'AI & ML', defaultSeats: 5 },
-    { name: 'Claude (Anthropic)', vendor: 'Anthropic', domain: 'anthropic.com', category: 'AI & ML', defaultSeats: 3 },
+    { name: 'Claude', vendor: 'Anthropic', domain: 'anthropic.com', category: 'AI & ML', defaultSeats: 3 },
     { name: 'GitHub Copilot', vendor: 'GitHub', domain: 'github.com', category: 'AI & ML', defaultSeats: 5 },
     { name: 'Jasper', vendor: 'Jasper AI', domain: 'jasper.ai', category: 'AI & ML', defaultSeats: 3 },
     { name: 'Grammarly Business', vendor: 'Grammarly', domain: 'grammarly.com', category: 'AI & ML', defaultSeats: 5 },
