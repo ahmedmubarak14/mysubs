@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Eye, EyeOff, Mail, Lock, User, Building2, Zap } from 'lucide-react';
 import styles from '../login/auth.module.css';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 export default function SignupPage() {
     const { t, isRTL } = useLanguage();
@@ -53,7 +55,9 @@ export default function SignupPage() {
         <div className={styles.authPage} dir={isRTL ? 'rtl' : 'ltr'}>
             <div className={styles.authLeft}>
                 <div className={styles.authBrand}>
-                    <img src="/SubTrack/logo-white.png" alt="Subtrack" className="sidebar-logo-img" style={{ height: 32, width: 'auto' }} />
+                    <Link href="/">
+                        <img src="/SubTrack/logo-white.png" alt="Subtrack" className="sidebar-logo-img" style={{ height: 32, width: 'auto', cursor: 'pointer' }} />
+                    </Link>
                 </div>
                 <div className={styles.authHero}>
                     <h1 style={{ whiteSpace: 'pre-line' }}>{t('auth_hero_2_title')}</h1>
@@ -76,6 +80,9 @@ export default function SignupPage() {
             </div>
 
             <div className={styles.authRight}>
+                <div style={{ position: 'absolute', top: '10px', right: isRTL ? 'auto' : '10px', left: isRTL ? '10px' : 'auto', zIndex: 10 }}>
+                    <LanguageSwitcher />
+                </div>
                 <div className={styles.authCard}>
                     <h2>{step === 'credentials' ? t('auth_create_account') : t('auth_name_workspace')}</h2>
                     <p className={styles.authSubtitle}>

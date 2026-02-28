@@ -9,6 +9,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import type { Profile } from '@/types';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 interface SidebarProps {
     profile?: Profile | null;
@@ -45,7 +46,9 @@ export default function Sidebar({ profile, onToggleNotifications }: SidebarProps
         <nav className="sidebar">
             {/* Logo */}
             <div className="sidebar-logo">
-                <img src="/SubTrack/logo-light.png" alt="Subtrack" className="sidebar-logo-img" style={{ maxHeight: 36, width: 'auto' }} />
+                <Link href="/">
+                    <img src="/SubTrack/logo-light.png" alt="Subtrack" className="sidebar-logo-img" style={{ maxHeight: 36, width: 'auto', cursor: 'pointer' }} />
+                </Link>
             </div>
 
             {/* Navigation */}
@@ -73,22 +76,8 @@ export default function Sidebar({ profile, onToggleNotifications }: SidebarProps
             </div>
 
             {/* Language Toggle */}
-            <div style={{ padding: '0 12px 8px', marginTop: 'auto' }}>
-                <button
-                    onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
-                    style={{
-                        width: '100%', padding: '7px 12px', borderRadius: 8,
-                        border: '1.5px solid rgba(0,0,0,0.08)',
-                        background: 'rgba(0,0,0,0.04)', color: '#1e293b',
-                        fontSize: 13, fontWeight: 600, cursor: 'pointer', letterSpacing: 0.5,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                        transition: 'all 0.15s'
-                    }}
-                    title="Switch language / تغيير اللغة"
-                >
-                    <span>{lang === 'en' ? '🇸🇦' : '🇺🇸'}</span>
-                    <span>{lang === 'en' ? 'عربي' : 'English'}</span>
-                </button>
+            <div style={{ padding: '0 12px 8px', marginTop: 'auto', display: 'flex', justifyContent: 'center' }}>
+                <LanguageSwitcher />
             </div>
 
             {/* User footer */}

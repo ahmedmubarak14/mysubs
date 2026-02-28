@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import Link from 'next/link';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const PRIMARY = "#1F0433";
 const PRIMARY_FG = "#FFFFFF";
@@ -426,6 +427,7 @@ export default function SubTrackLanding() {
             <a href="#pricing">{t('land_nav_pricing')}</a>
           </nav>
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <LanguageSwitcher />
             <Link href="/login" className="btn btn-ghost btn-sm hide-mobile">{t('land_nav_login')}</Link>
             <Link href="/signup" className="btn btn-primary btn-sm">{t('land_nav_get_started')}</Link>
           </div>
