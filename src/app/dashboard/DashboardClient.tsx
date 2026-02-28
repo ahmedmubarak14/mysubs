@@ -251,7 +251,7 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
                         {categoryData.length > 0 ? (
                             <ResponsiveContainer width="100%" height={220}>
                                 <PieChart>
-                                    <Pie data={categoryData} cx="50%" cy="50%" innerRadius={60} outerRadius={95}
+                                    <Pie data={categoryData} cx="50%" cy="50%" innerRadius={55} outerRadius={80}
                                         dataKey="value" paddingAngle={3}>
                                         {categoryData.map((_, i) => (
                                             <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />

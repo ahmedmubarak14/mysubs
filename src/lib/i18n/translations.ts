@@ -53,6 +53,7 @@ const en = {
     cat_Security: 'Security',
     cat_Cloud: 'Cloud',
     'cat_AI & ML': 'AI & ML',
+    'cat_Domain & Hosting': 'Domain & Hosting',
     cat_Other: 'Other',
 
     // Subscriptions
@@ -475,6 +476,7 @@ const ar: typeof en = {
     cat_Security: 'الأمان',
     cat_Cloud: 'الحوسبة السحابية',
     'cat_AI & ML': 'الذكاء الاصطناعي',
+    'cat_Domain & Hosting': 'النطاقات والاستضافة',
     cat_Other: 'أخرى',
 
     subs_title: 'الاشتراكات',
