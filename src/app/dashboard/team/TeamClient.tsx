@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Users, Shield, Eye, BarChart2, X, Mail, TrendingUp } from 'lucide-react';
+import { Users, Shield, Eye, BarChart2, X, Mail, TrendingUp, Upload, Trash2, Edit2, CheckSquare } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { createClient } from '@/lib/supabase/client';
 import type { Profile, Subscription } from '@/types';
@@ -26,6 +26,101 @@ export default function TeamClient({ members, subscriptions, currentProfile, org
     const [inviteSuccess, setInviteSuccess] = useState('');
 
     const isAdmin = currentProfile?.role === 'admin';
+
+    // Bulk Management State
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [showBulkRole, setShowBulkRole] = useState(false);
+    const [bulkRoleValue, setBulkRoleValue] = useState<'viewer' | 'manager' | 'admin'>('viewer');
+    const [isProcessingBulk, setIsProcessingBulk] = useState(false);
+    const [showCsvModal, setShowCsvModal] = useState(false);
+    const [csvFile, setCsvFile] = useState<File | null>(null);
+    const [bulkAlert, setBulkAlert] = useState({ message: '', type: '' });
+
+    const toggleSelectAll = () => {
+        if (selectedIds.size === members.length) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(members.map(m => m.id)));
+        }
+    };
+
+    const toggleSelect = (id: string) => {
+        const newSet = new Set(selectedIds);
+        if (newSet.has(id)) newSet.delete(id);
+        else newSet.add(id);
+        setSelectedIds(newSet);
+    };
+
+    const handleBulkDelete = async () => {
+        if (!confirm(`Are you sure you want to remove ${selectedIds.size} users?`)) return;
+        setIsProcessingBulk(true);
+        const supabase = createClient();
+        for (const id of selectedIds) {
+            if (id === currentProfile?.id) continue;
+            await supabase.from('profiles').delete().eq('id', id);
+        }
+        setIsProcessingBulk(false);
+        setSelectedIds(new Set());
+        window.location.reload();
+    };
+
+    const handleBulkRole = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsProcessingBulk(true);
+        const supabase = createClient();
+        for (const id of selectedIds) {
+            if (id === currentProfile?.id) continue;
+            await supabase.from('profiles').update({ role: bulkRoleValue }).eq('id', id);
+        }
+        setIsProcessingBulk(false);
+        setShowBulkRole(false);
+        setSelectedIds(new Set());
+        window.location.reload();
+    };
+
+    const handleCsvUpload = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!csvFile || !orgId) return;
+        setIsProcessingBulk(true);
+        setBulkAlert({ message: '', type: '' });
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const text = event.target?.result as string;
+            // Support comma or semicolon delimited CSV, split by line
+            const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+            let successCount = 0;
+            const supabase = createClient();
+
+            // Skip header row if it contains 'email'
+            const startIndex = lines[0].toLowerCase().includes('email') ? 1 : 0;
+
+            for (let i = startIndex; i < lines.length; i++) {
+                const cols = lines[i].split(/[,;]/).map(c => c.trim());
+                const email = cols[0];
+                let role = cols[1]?.toLowerCase();
+                if (!['admin', 'manager', 'viewer'].includes(role)) role = 'viewer';
+
+                if (email && email.includes('@')) {
+                    const { error } = await supabase.functions.invoke('invite-user', {
+                        body: { email, role, orgId }
+                    });
+                    if (!error) successCount++;
+                }
+            }
+
+            setIsProcessingBulk(false);
+            if (successCount > 0) {
+                setBulkAlert({ message: `Successfully invited ${successCount} users from CSV.`, type: 'success' });
+                setShowCsvModal(false);
+                setCsvFile(null);
+            } else {
+                setBulkAlert({ message: 'No valid invites could be sent. Ensure format is: email,role', type: 'error' });
+            }
+        };
+        reader.readAsText(csvFile);
+    };
 
     const getMemberStats = (memberId: string) => {
         const owned = subscriptions.filter(s => s.owner_id === memberId);
@@ -84,9 +179,14 @@ export default function TeamClient({ members, subscriptions, currentProfile, org
         <div>
             <Topbar title={t('team_title')} onToggleNotifications={openPanel}>
                 {isAdmin && (
-                    <button className="btn btn-primary" onClick={() => setShowInvite(true)}>
-                        <Users size={16} /> {t('team_invite')}
-                    </button>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                        <button className="btn btn-secondary" onClick={() => setShowCsvModal(true)}>
+                            <Upload size={16} /> Bulk CSV
+                        </button>
+                        <button className="btn btn-primary" onClick={() => setShowInvite(true)}>
+                            <Users size={16} /> {t('team_invite')}
+                        </button>
+                    </div>
                 )}
             </Topbar>
 
@@ -107,10 +207,36 @@ export default function TeamClient({ members, subscriptions, currentProfile, org
 
                 {/* Member Table */}
                 <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                    {bulkAlert.message && (
+                        <div style={{ padding: '16px 20px', background: bulkAlert.type === 'error' ? 'var(--color-red-bg)' : 'var(--color-green-bg)', color: bulkAlert.type === 'error' ? 'var(--color-red)' : 'var(--color-green)', borderBottom: '1px solid var(--color-border)', fontSize: 13, fontWeight: 600 }}>
+                            {bulkAlert.message}
+                            <button className="btn btn-ghost btn-sm" style={{ float: 'right', marginTop: -4 }} onClick={() => setBulkAlert({ message: '', type: '' })}><X size={14} /></button>
+                        </div>
+                    )}
+
+                    {selectedIds.size > 0 && (
+                        <div style={{ padding: '12px 20px', background: 'var(--color-purple-bg)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--color-purple)' }}>
+                            <div style={{ fontWeight: 700, color: 'var(--color-purple)', fontSize: 14 }}>
+                                {selectedIds.size} user{selectedIds.size !== 1 ? 's' : ''} selected
+                            </div>
+                            <div style={{ display: 'flex', gap: 10 }}>
+                                <button className="btn btn-secondary btn-sm" onClick={() => setShowBulkRole(true)} disabled={isProcessingBulk}>
+                                    <Edit2 size={14} /> Edit Roles
+                                </button>
+                                <button className="btn btn-ghost btn-sm" style={{ color: 'var(--color-red)', background: 'var(--color-red-bg)' }} onClick={handleBulkDelete} disabled={isProcessingBulk}>
+                                    <Trash2 size={14} /> Remove Selected
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="table-wrapper" style={{ border: 'none', borderRadius: 0 }}>
                         <table className="table">
                             <thead>
                                 <tr>
+                                    {isAdmin && (
+                                        <th style={{ width: 40 }}><input type="checkbox" checked={selectedIds.size === members.length && members.length > 0} onChange={toggleSelectAll} style={{ accentColor: 'var(--color-purple)' }} /></th>
+                                    )}
                                     <th>User Name</th>
                                     <th>Role</th>
                                     <th>Apps Managed</th>
@@ -123,7 +249,10 @@ export default function TeamClient({ members, subscriptions, currentProfile, org
                                     const initials = member.full_name?.split(' ').map(n => n?.[0] || '').join('').toUpperCase().slice(0, 2) || member.email?.[0]?.toUpperCase() || '?';
                                     const isYou = member.id === currentProfile?.id;
                                     return (
-                                        <tr key={member.id}>
+                                        <tr key={member.id} style={{ background: selectedIds.has(member.id) ? 'var(--color-purple-bg)' : undefined }}>
+                                            {isAdmin && (
+                                                <td><input type="checkbox" checked={selectedIds.has(member.id)} onChange={() => toggleSelect(member.id)} style={{ accentColor: 'var(--color-purple)' }} /></td>
+                                            )}
                                             <td data-label="User Name">
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                                                     <div style={{
@@ -252,6 +381,81 @@ export default function TeamClient({ members, subscriptions, currentProfile, org
                                 <button type="button" className="btn btn-secondary" onClick={() => setShowInvite(false)}>{t('team_invite_cancel')}</button>
                                 <button type="submit" className="btn btn-primary" disabled={inviting}>
                                     {inviting ? t('team_invite_sending') : t('team_invite_send')}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+            {/* Bulk Role Modal */}
+            {showBulkRole && (
+                <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowBulkRole(false); }}>
+                    <div className="modal" style={{ maxWidth: 400 }}>
+                        <div className="modal-header">
+                            <span className="modal-title">Bulk Change Roles</span>
+                            <button className="modal-close" onClick={() => setShowBulkRole(false)}><X size={18} /></button>
+                        </div>
+                        <form onSubmit={handleBulkRole}>
+                            <div className="modal-body">
+                                <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', marginBottom: 16 }}>You are about to change the role for <strong>{selectedIds.size} users</strong>.</p>
+                                <div className="form-group">
+                                    <label className="form-label">New Role</label>
+                                    <select className="form-select" value={bulkRoleValue} onChange={e => setBulkRoleValue(e.target.value as any)}>
+                                        <option value="viewer">{t('team_role_viewer')}</option>
+                                        <option value="manager">{t('team_role_manager')}</option>
+                                        <option value="admin">{t('team_role_admin')}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowBulkRole(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" disabled={isProcessingBulk}>
+                                    {isProcessingBulk ? 'Updating...' : 'Update Roles'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* CSV Upload Modal */}
+            {showCsvModal && (
+                <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowCsvModal(false); }}>
+                    <div className="modal" style={{ maxWidth: 420 }}>
+                        <div className="modal-header">
+                            <span className="modal-title">Bulk Import via CSV</span>
+                            <button className="modal-close" onClick={() => setShowCsvModal(false)}><X size={18} /></button>
+                        </div>
+                        <form onSubmit={handleCsvUpload}>
+                            <div className="modal-body">
+                                <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 16 }}>Upload a CSV file with team members to bulk-invite them. The file should have columns for <strong>email</strong> and optionally <strong>role</strong> (admin, manager, viewer).</p>
+
+                                <div className="form-group">
+                                    <label className="form-label">CSV File</label>
+                                    <input
+                                        type="file"
+                                        accept=".csv"
+                                        onChange={e => setCsvFile(e.target.files?.[0] || null)}
+                                        className="form-input"
+                                        style={{ padding: '8px 12px' }}
+                                        required
+                                    />
+                                    {csvFile && <div style={{ fontSize: 12, marginTop: 8, color: 'var(--color-green)', fontWeight: 600 }}>Selected: {csvFile.name}</div>}
+                                </div>
+
+                                <div style={{ padding: 12, background: 'var(--color-bg-secondary)', borderRadius: 8, marginTop: 16 }}>
+                                    <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8, color: 'var(--color-text-tertiary)' }}>Example Format.csv</div>
+                                    <code style={{ fontSize: 12, display: 'block', color: 'var(--color-text-secondary)' }}>
+                                        email,role<br />
+                                        dev@company.com,viewer<br />
+                                        cto@company.com,admin
+                                    </code>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowCsvModal(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" disabled={isProcessingBulk || !csvFile}>
+                                    {isProcessingBulk ? 'Processing...' : 'Upload & Invite'}
                                 </button>
                             </div>
                         </form>

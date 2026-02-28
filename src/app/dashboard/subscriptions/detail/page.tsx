@@ -20,37 +20,74 @@ function SubscriptionDetail() {
     const [selectedRole, setSelectedRole] = useState('user');
     const [addingUser, setAddingUser] = useState(false);
     const [removingUserId, setRemovingUserId] = useState('');
+    const [addMode, setAddMode] = useState<'select' | 'bulk'>('select');
+    const [bulkEmails, setBulkEmails] = useState('');
 
     useEffect(() => {
         if (!id) { setSub('not-found'); return; }
         const supabase = createClient();
-        supabase.from('subscriptions')
-            .select('*, owner:profiles(full_name, email), subscription_users(*, profile:profiles(id, full_name, email, avatar_url))')
-            .eq('id', id).single()
-            .then((result: { data: any }) => {
-                setSub(result.data ?? 'not-found');
-                if (result.data?.org_id) {
-                    supabase.from('profiles').select('id, full_name, email').eq('org_id', result.data.org_id)
-                        .then((res: any) => setTeam(res.data || []));
+        const fetchSub = async () => {
+            const { data, error } = await supabase.from('subscriptions')
+                .select('*, owner:profiles(full_name, email), subscription_users(*, profile:profiles(id, full_name, email, avatar_url))')
+                .eq('id', id).single();
+
+            if (error) {
+                // Feature degradation: If the subscription_users table doesn't exist yet, fetch just the subscription
+                const fallback = await supabase.from('subscriptions').select('*, owner:profiles(full_name, email)').eq('id', id).single();
+                setSub(fallback.data ? { ...fallback.data, subscription_users: [] } : 'not-found');
+                if (fallback.data?.org_id) {
+                    const res = await supabase.from('profiles').select('id, full_name, email').eq('org_id', fallback.data.org_id);
+                    setTeam(res.data || []);
                 }
-            });
+            } else {
+                setSub(data ?? 'not-found');
+                if (data?.org_id) {
+                    const res = await supabase.from('profiles').select('id, full_name, email').eq('org_id', data.org_id);
+                    setTeam(res.data || []);
+                }
+            }
+        };
+        fetchSub();
     }, [id]);
 
     const handleAddUser = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!selectedUserId || !sub) return;
+        if (!sub) return;
         setAddingUser(true);
         const supabase = createClient();
-        const { data, error } = await supabase.from('subscription_users').insert({
-            subscription_id: sub.id,
-            profile_id: selectedUserId,
-            role: selectedRole
-        }).select('*, profile:profiles(id, full_name, email, avatar_url)').single();
 
-        if (data) {
-            setSub({ ...sub, subscription_users: [...(sub.subscription_users || []), data] });
+        if (addMode === 'select' && selectedUserId) {
+            const { data, error } = await supabase.from('subscription_users').insert({
+                subscription_id: sub.id,
+                profile_id: selectedUserId,
+                role: selectedRole
+            }).select('*, profile:profiles(id, full_name, email, avatar_url)').single();
+
+            if (data) {
+                setSub({ ...sub, subscription_users: [...(sub.subscription_users || []), data] });
+                setShowAddUser(false);
+                setSelectedUserId('');
+                setSelectedRole('user');
+            }
+        } else if (addMode === 'bulk' && bulkEmails) {
+            const emails = bulkEmails.split(/[,;\n]/).map(em => em.trim().toLowerCase()).filter(em => em.includes('@'));
+            const matchedUsers = team.filter(t => emails.includes(t.email?.toLowerCase()));
+
+            let newSubsUsers = [];
+            for (const user of matchedUsers) {
+                if (sub.subscription_users?.some((su: any) => su.profile_id === user.id)) continue;
+                const { data } = await supabase.from('subscription_users').insert({
+                    subscription_id: sub.id,
+                    profile_id: user.id,
+                    role: selectedRole
+                }).select('*, profile:profiles(id, full_name, email, avatar_url)').single();
+                if (data) newSubsUsers.push(data);
+            }
+            if (newSubsUsers.length > 0) {
+                setSub({ ...sub, subscription_users: [...(sub.subscription_users || []), ...newSubsUsers] });
+            }
             setShowAddUser(false);
-            setSelectedUserId('');
+            setBulkEmails('');
             setSelectedRole('user');
         }
         setAddingUser(false);
@@ -210,15 +247,27 @@ function SubscriptionDetail() {
                         </div>
                         <form onSubmit={handleAddUser}>
                             <div className="modal-body">
-                                <div className="form-group">
-                                    <label className="form-label">Team Member</label>
-                                    <select className="form-select" value={selectedUserId} onChange={e => setSelectedUserId(e.target.value)} required>
-                                        <option value="" disabled>Select a user...</option>
-                                        {team.filter(t => !sub.subscription_users?.some((su: any) => su.profile_id === t.id)).map(member => (
-                                            <option key={member.id} value={member.id}>{member.full_name || member.email}</option>
-                                        ))}
-                                    </select>
+                                <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+                                    <button type="button" className={`btn btn-sm ${addMode === 'select' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setAddMode('select')} style={{ flex: 1 }}>Select User</button>
+                                    <button type="button" className={`btn btn-sm ${addMode === 'bulk' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setAddMode('bulk')} style={{ flex: 1 }}>Bulk Invite</button>
                                 </div>
+                                {addMode === 'select' ? (
+                                    <div className="form-group">
+                                        <label className="form-label">Team Member</label>
+                                        <select className="form-select" value={selectedUserId} onChange={e => setSelectedUserId(e.target.value)} required={addMode === 'select'}>
+                                            <option value="" disabled>Select a user...</option>
+                                            {team.filter(t => !sub.subscription_users?.some((su: any) => su.profile_id === t.id)).map(member => (
+                                                <option key={member.id} value={member.id}>{member.full_name || member.email}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                ) : (
+                                    <div className="form-group">
+                                        <label className="form-label">Emails (Comma-separated)</label>
+                                        <textarea className="form-input" style={{ minHeight: 80, resize: 'vertical' }} value={bulkEmails} onChange={e => setBulkEmails(e.target.value)} placeholder="user1@company.com, user2@company.com" required={addMode === 'bulk'} />
+                                        {bulkEmails && team.length > 0 && <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', marginTop: 8 }}>This will match emails to existing internal team members before adding them to the app.</div>}
+                                    </div>
+                                )}
                                 <div className="form-group">
                                     <label className="form-label">App Role</label>
                                     <select className="form-select" value={selectedRole} onChange={e => setSelectedRole(e.target.value)}>
@@ -231,8 +280,8 @@ function SubscriptionDetail() {
                             </div>
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-secondary" onClick={() => setShowAddUser(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary" disabled={addingUser || !selectedUserId}>
-                                    {addingUser ? 'Assigning...' : 'Assign User'}
+                                <button type="submit" className="btn btn-primary" disabled={addingUser || (addMode === 'select' ? !selectedUserId : !bulkEmails)}>
+                                    {addingUser ? 'Assigning...' : 'Assign User(s)'}
                                 </button>
                             </div>
                         </form>
