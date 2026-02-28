@@ -1335,7 +1335,7 @@ p {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
-  z-index: 45;
+  z-index: 90;
   backdrop-filter: blur(4px);
 }
 
@@ -1362,7 +1362,7 @@ p {
     bottom: 0;
     left: 0;
     width: var(--sidebar-width);
-    z-index: 50;
+    z-index: 100;
     transform: translateX(-100%);
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
