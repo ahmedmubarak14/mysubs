@@ -53,31 +53,33 @@ export default function SettingsClient({ profile, orgName, orgId }: Props) {
     const [pwError, setPwError] = useState('');
     const [pwSaved, setPwSaved] = useState(false);
 
-    // Load org data (currency + logo) on mount
+    // Load org data (logo) on mount
     useEffect(() => {
         if (!orgId) return;
         supabase
             .from('organizations')
-            .select('logo_url, currency')
+            .select('logo_url')
             .eq('id', orgId)
             .single()
             .then(({ data }: any) => {
                 if (data?.logo_url) setLogoUrl(data.logo_url);
-                if (data?.currency) setCurrency(data.currency);
             });
     }, [orgId, supabase]);
 
-    // Load notification prefs from profile on mount
+    // Load notification prefs and currency from profile on mount
     useEffect(() => {
         if (!profile?.id) return;
         supabase
             .from('profiles')
-            .select('notification_prefs')
+            .select('notification_prefs, currency')
             .eq('id', profile.id)
             .single()
             .then(({ data }: any) => {
                 if (data?.notification_prefs) {
                     setNotifPrefs({ ...DEFAULT_PREFS, ...data.notification_prefs });
+                }
+                if (data?.currency) {
+                    setCurrency(data.currency);
                 }
             });
     }, [profile?.id, supabase]);
@@ -119,21 +121,21 @@ export default function SettingsClient({ profile, orgName, orgId }: Props) {
         }
     };
 
-    // ── Save profile + org (including currency)
+    // ── Save profile (including currency) + org
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaving(true); setError('');
         try {
             const { error: profileError } = await supabase
                 .from('profiles')
-                .update({ full_name: name })
+                .update({ full_name: name, currency })
                 .eq('id', profile!.id);
             if (profileError) throw new Error(profileError.message);
 
             if (profile?.role === 'admin' && orgId) {
                 const { error: orgError } = await supabase
                     .from('organizations')
-                    .update({ name: org, currency })
+                    .update({ name: org })
                     .eq('id', orgId);
                 if (orgError) throw new Error(orgError.message);
             }
@@ -269,13 +271,10 @@ export default function SettingsClient({ profile, orgName, orgId }: Props) {
                             </div>
                             <div className="form-group">
                                 <label className="form-label">{t('settings_currency')}</label>
-                                <select className="form-select" value={currency} onChange={e => setCurrency(e.target.value)} disabled={profile?.role !== 'admin'}>
+                                <select className="form-select" value={currency} onChange={e => setCurrency(e.target.value)}>
                                     {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.code} — {c.name}</option>)}
                                 </select>
-                                {profile?.role !== 'admin'
-                                    ? <span className="form-hint">Only admins can change the organisation currency.</span>
-                                    : <span className="form-hint">This affects how costs are displayed across the app. Saved with your profile.</span>
-                                }
+                                <span className="form-hint">This affects how costs are displayed across the app. Saved to your personal profile.</span>
                             </div>
                         </div>
                     </div>
