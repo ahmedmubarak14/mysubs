@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { LanguageProvider } from '@/lib/i18n/LanguageContext';
 import './globals.css';
+import '../css/tailwind.css';
 
 export const metadata: Metadata = {
   title: 'SubTrack — Subscription Tracker',
@@ -13,7 +14,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="/css/tailwind.css" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
       <body style={{ fontFamily: "'Inter', sans-serif" }}>
