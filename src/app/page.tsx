@@ -292,15 +292,21 @@ export default function SubTrackLanding() {
             </div>
           </div>
         </div>
-      </section >
+      </section>
 
       {/* FAQ SECTION */}
-      < section className="py-16 lg:py-24" style={{ backgroundColor: '#F8F6FA' }
-      }>
+      <section className="py-16 lg:py-24" style={{ backgroundColor: '#F8F6FA' }}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <span className="inline-block mb-4 text-sm font-bold tracking-wider uppercase" style={{ color: '#A855F7' }}>{t('land_faq_title')}</span>
-            <h1 className="text-4xl md:text-5xl font-bold mb-6" style={{ color: '#1F0433', letterSpacing: '-0.02em' }}>{t('land_faq_sub')}</h1>
+            <div className="inline-flex items-center gap-3 justify-center mb-4">
+              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#A855F7' }}></span>
+              <h2 className="text-4xl md:text-5xl font-bold" style={{ color: '#1F0433', letterSpacing: '-0.02em' }}>
+                {t('land_faq_title')}
+              </h2>
+            </div>
+            <p className="text-lg md:text-xl text-gray-500 font-medium">
+              {t('land_faq_sub')}
+            </p>
           </div>
 
           <div className="max-w-3xl mx-auto">
