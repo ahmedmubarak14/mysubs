@@ -257,7 +257,7 @@ export default function SubTrackLanding() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="how" className="py-20 lg:py-32 overflow-hidden">
+      <section id="how" className="pt-20 pb-32 lg:pt-32 lg:pb-40 overflow-hidden">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-3 justify-center mb-4">
