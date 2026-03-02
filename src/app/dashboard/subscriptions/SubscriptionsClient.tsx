@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { format, differenceInDays, parseISO } from 'date-fns';
-import { Search, Plus, Users, ChevronUp, ChevronDown, Edit2, Trash2, Download, Shield, AlertCircle, TrendingUp, ArrowUpRight, Check } from 'lucide-react';
+import { format, differenceInDays, parseISO, addMonths, addYears, addWeeks, addDays } from 'date-fns';
+import { Search, Plus, Users, ChevronUp, ChevronDown, Edit2, Trash2, Download, AlertCircle, CheckCircle2, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
@@ -37,6 +37,21 @@ function getDaysUntil(date: string) {
     return differenceInDays(parseISO(date), new Date());
 }
 
+/** Advance a date by one billing cycle */
+function nextRenewalDate(currentDate: string, billingCycle: string): string {
+    const base = parseISO(currentDate);
+    const cycleMap: Record<string, Date> = {
+        monthly: addMonths(base, 1),
+        quarterly: addMonths(base, 3),
+        biannual: addMonths(base, 6),
+        yearly: addYears(base, 1),
+        annual: addYears(base, 1),
+        weekly: addWeeks(base, 1),
+        daily: addDays(base, 1),
+    };
+    return (cycleMap[billingCycle] ?? addMonths(base, 1)).toISOString().split('T')[0];
+}
+
 type SortKey = 'name' | 'cost' | 'renewal_date' | 'seats' | 'status';
 type SortDir = 'asc' | 'desc';
 
@@ -56,6 +71,8 @@ export default function SubscriptionsClient({ subscriptions: initialSubs, teamMe
     const [editSub, setEditSub] = useState<Subscription | null>(null);
     const [deleting, setDeleting] = useState<string | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+    const [confirmRenew, setConfirmRenew] = useState<string | null>(null); // subscription id awaiting renewal confirm
+    const [renewingId, setRenewingId] = useState<string | null>(null);
     // Exchange rates relative to USD (SAR is pegged at 3.75)
     const [rates, setRates] = useState<Record<string, number>>({ USD: 1, SAR: 3.75, EUR: 0.92, GBP: 0.79 });
 
@@ -117,6 +134,36 @@ export default function SubscriptionsClient({ subscriptions: initialSubs, teamMe
         setSubscriptions(prev => prev.filter(s => s.id !== id));
         setDeleting(null);
         setConfirmDelete(null);
+    };
+
+    /** Confirm renewal: advance renewal_date by one cycle, notify integrations */
+    const handleConfirmRenewal = async (sub: Subscription) => {
+        setRenewingId(sub.id);
+        const newDate = nextRenewalDate(sub.renewal_date, sub.billing_cycle);
+        const { error } = await supabase
+            .from('subscriptions')
+            .update({ renewal_date: newDate, status: 'active' })
+            .eq('id', sub.id);
+
+        if (!error) {
+            setSubscriptions(prev =>
+                prev.map(s => s.id === sub.id ? { ...s, renewal_date: newDate, status: 'active' } : s)
+            );
+            // Fire webhook alerts for connected integrations
+            supabase.functions.invoke('send-webhook-alert', {
+                body: {
+                    orgId,
+                    subscriptionName: sub.name,
+                    renewalDate: newDate,
+                    cost: sub.cost,
+                    currency: sub.currency,
+                    daysUntilRenewal: 0,
+                    eventType: 'renewal_confirmed',
+                },
+            }).catch(() => { }); // fire and forget — UI doesn't depend on it
+        }
+        setRenewingId(null);
+        setConfirmRenew(null);
     };
 
     const exportCSV = () => {
@@ -274,7 +321,34 @@ export default function SubscriptionsClient({ subscriptions: initialSubs, teamMe
                                             </span>
                                         </td>
                                         <td>
-                                            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                                            <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+                                                {/* ── Confirm Renewal pill – only for overdue / due today ── */}
+                                                {days <= 0 && sub.status !== 'cancelled' && (
+                                                    confirmRenew === sub.id ? (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--color-green-bg)', border: '1.5px solid var(--color-green)', borderRadius: 8, padding: '4px 8px' }}>
+                                                            <span style={{ fontSize: 11, color: 'var(--color-green)', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                                                                Next: {format(parseISO(nextRenewalDate(sub.renewal_date, sub.billing_cycle)), 'MMM d, yyyy')}
+                                                            </span>
+                                                            <button
+                                                                className="btn btn-sm"
+                                                                style={{ background: 'var(--color-green)', color: '#fff', fontSize: 11, padding: '3px 10px', display: 'flex', alignItems: 'center', gap: 4 }}
+                                                                onClick={() => handleConfirmRenewal(sub)}
+                                                                disabled={renewingId === sub.id}
+                                                            >
+                                                                {renewingId === sub.id ? '…' : <><CheckCircle2 size={11} /> Confirm</>}
+                                                            </button>
+                                                            <button className="btn btn-ghost btn-sm" style={{ fontSize: 11, padding: '3px 6px' }} onClick={() => setConfirmRenew(null)}>✕</button>
+                                                        </div>
+                                                    ) : (
+                                                        <button
+                                                            className="btn btn-sm"
+                                                            style={{ background: 'var(--color-orange-bg)', color: 'var(--color-orange)', border: '1.5px solid var(--color-orange)', fontSize: 11, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 700 }}
+                                                            onClick={() => { setConfirmRenew(sub.id); setConfirmDelete(null); }}
+                                                        >
+                                                            <RefreshCw size={11} /> Confirm Renewal
+                                                        </button>
+                                                    )
+                                                )}
                                                 <button className="btn btn-ghost btn-sm" title="Edit"
                                                     onClick={() => setEditSub(sub)}>
                                                     <Edit2 size={14} />

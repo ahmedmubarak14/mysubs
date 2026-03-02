@@ -83,6 +83,10 @@ const en = {
     subs_status_cancelled: 'Cancelled',
     subs_monthly: 'Monthly',
     subs_total_monthly: 'Total Monthly',
+    subs_search_ph: 'Search subscriptions…',
+    subs_status_all: 'All statuses',
+    subs_empty_title: 'No subscriptions yet',
+    subs_empty_sub: 'Add your first subscription to start tracking spend.',
 
     // Add subscription modal
     modal_pick_app: 'Choose an App',
@@ -433,9 +437,6 @@ const en = {
     auth_stat_6_val: '∞',
     auth_stat_6_lab: 'subscriptions tracked',
 
-    // Subscriptions Page & Modals
-    subs_search_ph: 'Search subscriptions…',
-    subs_status_all: 'All statuses',
     subs_cat_all: 'All categories',
 };
 
@@ -517,6 +518,10 @@ const ar: typeof en = {
     subs_status_cancelled: 'ملغى',
     subs_monthly: 'شهرياً',
     subs_total_monthly: 'إجمالي شهري',
+    subs_search_ph: 'البحث في الاشتراكات…',
+    subs_status_all: 'كل الحالات',
+    subs_empty_title: 'لا توجد اشتراكات بعد',
+    subs_empty_sub: 'أضف أول اشتراك لبدء تتبع الإنفاق.',
 
     modal_pick_app: 'اختر تطبيقاً',
     modal_pick_subtitle: 'اختر تطبيقاً شائعاً أو أضف اشتراكاً مخصصاً',
@@ -861,9 +866,6 @@ const ar: typeof en = {
     auth_stat_6_val: '∞',
     auth_stat_6_lab: 'اشتراكات تم تتبعها',
 
-    // Subscriptions Page & Modals
-    subs_search_ph: 'البحث في الاشتراكات…',
-    subs_status_all: 'كل الحالات',
     subs_cat_all: 'كل الفئات',
 };
 

@@ -161,6 +161,7 @@ interface DbIntegration {
     bot_token?: string;
     chat_id?: string;
     enabled: boolean;
+    remind_days_before?: number[];
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -177,6 +178,7 @@ export default function IntegrationsClient() {
     // Connect modal state
     const [modalIntegration, setModalIntegration] = useState<IntegrationDef | null>(null);
     const [modalValues, setModalValues] = useState<Record<string, string>>({});
+    const [remindDays, setRemindDays] = useState<number[]>([1, 7]); // reminder days selection
     const [modalSaving, setModalSaving] = useState(false);
     const [modalError, setModalError] = useState('');
 
@@ -202,6 +204,9 @@ export default function IntegrationsClient() {
         const prefilled: Record<string, string> = {};
         integration.fields.forEach(f => { prefilled[f.key] = (existing as any)?.[f.key] ?? ''; });
         setModalValues(prefilled);
+        setRemindDays((existing?.remind_days_before && existing.remind_days_before.length > 0)
+            ? existing.remind_days_before
+            : [1, 7]);
         setModalError('');
         setModalIntegration(integration);
     };
@@ -217,11 +222,11 @@ export default function IntegrationsClient() {
         setModalSaving(true);
         setModalError('');
 
-        // Build upsert payload
         const payload: any = {
             org_id: orgId,
             type: modalIntegration.id,
             enabled: true,
+            remind_days_before: remindDays,
             ...modalValues,
         };
 
@@ -410,6 +415,35 @@ export default function IntegrationsClient() {
                                     {field.hint && <span className="form-hint">{field.hint}</span>}
                                 </div>
                             ))}
+
+                            {/* Reminder timing */}
+                            <div className="form-group">
+                                <label className="form-label" style={{ marginBottom: 10 }}>Remind me before renewal</label>
+                                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                    {[1, 3, 7, 14, 30].map(day => {
+                                        const on = remindDays.includes(day);
+                                        return (
+                                            <button
+                                                key={day}
+                                                type="button"
+                                                onClick={() => setRemindDays(prev =>
+                                                    on ? prev.filter(d => d !== day) : [...prev, day].sort((a, b) => a - b)
+                                                )}
+                                                style={{
+                                                    padding: '5px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                                                    border: on ? '1.5px solid var(--color-purple)' : '1.5px solid var(--color-border)',
+                                                    background: on ? 'var(--color-purple-bg)' : 'transparent',
+                                                    color: on ? 'var(--color-purple)' : 'var(--color-text-secondary)',
+                                                    transition: 'all 0.15s',
+                                                }}
+                                            >
+                                                {day === 1 ? '1 day' : `${day} days`}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                <span className="form-hint">You'll receive an alert on each selected day before the renewal date.</span>
+                            </div>
                         </div>
 
                         {/* Modal footer */}
