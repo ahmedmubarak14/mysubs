@@ -4,395 +4,38 @@ import { useState } from "react";
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import Link from 'next/link';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-
-const PRIMARY = "#1F0433";
-const PRIMARY_FG = "#FFFFFF";
-const BG = "#FFFFFF";
-const CARD = "#FFFFFF";
-const MUTED = "#F5F4F6";
-const MUTED_FG = "#6E6475";
-const BORDER = "#E8E4EB";
-const FG = "#1F0433";
-
-const CSS = `
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
-  body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    -webkit-font-smoothing: antialiased;
-    color: ${FG};
-  }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
-  }
-  @keyframes fade-in {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .animate-float    { animation: float 6s ease-in-out infinite; }
-  .animate-fade-in  { animation: fade-in 0.6s ease forwards; }
-
-  /* Card */
-  .card {
-    background: ${CARD};
-    border: 1px solid ${BORDER};
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 1px 4px rgba(31,4,51,0.06);
-    transition: box-shadow 0.2s;
-  }
-  .card:hover { box-shadow: 0 4px 16px rgba(31,4,51,0.1); }
-
-  /* Card header muted strip */
-  .card-header {
-    padding: 16px 20px;
-    border-bottom: 1px solid ${BORDER};
-    background: ${MUTED};
-  }
-  .card-header-center {
-    padding: 20px 20px 16px;
-    border-bottom: 1px solid ${BORDER};
-    background: ${MUTED};
-    text-align: center;
-  }
-  .card-body { padding: 20px; }
-
-  /* Icon boxes */
-  .icon-box {
-    width: 40px; height: 40px;
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-  }
-  .icon-box-lg {
-    width: 48px; height: 48px;
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px;
-    margin: 0 auto 12px;
-  }
-  .icon-amber   { background: rgba(245,158,11,0.1); }
-  .icon-green   { background: rgba(34,197,94,0.1); }
-  .icon-purple  { background: rgba(168,85,247,0.1); }
-  .icon-red     { background: rgba(239,68,68,0.1); }
-  .icon-emerald { background: rgba(16,185,129,0.1); }
-  .icon-orange  { background: rgba(249,115,22,0.1); }
-  .icon-teal    { background: rgba(20,184,166,0.1); }
-  .icon-blue    { background: rgba(59,130,246,0.1); }
-  .icon-plum    { background: rgba(31,4,51,0.08); }
-
-  /* Step number circle */
-  .step-num {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 28px; height: 28px;
-    border-radius: 50%;
-    background: ${PRIMARY};
-    color: ${PRIMARY_FG};
-    font-weight: 700; font-size: 13px;
-  }
-
-  /* Badge */
-  .badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 6px 14px;
-    border-radius: 999px;
-    background: rgba(31,4,51,0.07);
-    border: 1px solid rgba(31,4,51,0.15);
-    font-size: 13px; font-weight: 500;
-    color: ${PRIMARY};
-  }
-
-  /* Buttons */
-  .btn {
-    display: inline-flex; align-items: center; justify-content: center;
-    border-radius: 10px;
-    font-weight: 600; font-size: 15px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    border: none;
-    text-decoration: none;
-  }
-  .btn-lg { height: 48px; padding: 0 32px; font-size: 16px; }
-  .btn-md { height: 40px; padding: 0 20px; }
-  .btn-sm { height: 34px; padding: 0 16px; font-size: 14px; }
-  .btn-full { width: 100%; height: 44px; }
-
-  .btn-primary {
-    background: ${PRIMARY};
-    color: ${PRIMARY_FG};
-  }
-  .btn-primary:hover { background: #2d0649; transform: translateY(-1px); }
-
-  .btn-outline {
-    background: transparent;
-    color: ${PRIMARY};
-    border: 1.5px solid ${PRIMARY};
-  }
-  .btn-outline:hover { background: rgba(31,4,51,0.05); }
-
-  .btn-ghost {
-    background: transparent;
-    color: ${FG};
-  }
-  .btn-ghost:hover { background: ${MUTED}; }
-
-  /* Pricing card featured */
-  .card-featured {
-    border: 2px solid ${PRIMARY};
-    border-radius: 16px;
-    overflow: hidden;
-    background: ${CARD};
-    box-shadow: 0 4px 20px rgba(31,4,51,0.12);
-  }
-  .card-dim {
-    border: 1px solid ${BORDER};
-    border-radius: 16px;
-    overflow: hidden;
-    background: ${CARD};
-    opacity: 0.6;
-  }
-
-  /* Most popular badge */
-  .badge-popular {
-    display: inline-block;
-    background: #DDFF55;
-    color: ${PRIMARY};
-    font-size: 10px; font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 999px;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-  }
-
-  /* Layout helpers */
-  .section { position: relative; padding: 0 24px 80px; }
-  .container { max-width: 960px; margin: 0 auto; }
-  .text-center { text-align: center; }
-  .section-title {
-    font-size: 40px; font-weight: 800;
-    color: ${PRIMARY};
-    margin-bottom: 12px;
-    letter-spacing: -0.025em;
-  }
-  .section-sub {
-    font-size: 18px;
-    color: ${MUTED_FG};
-    margin-bottom: 48px;
-  }
-
-  .grid-3 {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
-  }
-  .grid-2 {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
-    max-width: 680px;
-    margin: 0 auto;
-  }
-  .grid-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 16px;
-  }
-
-  /* Header */
-  header {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
-    background: rgba(255,255,255,0.75);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid ${BORDER};
-    box-shadow: 0 1px 4px rgba(31,4,51,0.06);
-  }
-  .header-inner {
-    max-width: 1200px; margin: 0 auto;
-    padding: 16px 24px;
-    display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  }
-  nav a {
-    color: ${FG}; text-decoration: none;
-    font-weight: 500; font-size: 15px;
-    transition: color 0.15s;
-  }
-  nav a:hover { color: ${PRIMARY}; opacity: 0.7; }
-
-  /* Hero */
-  .hero { position: relative; padding: 140px 24px 80px; text-align: center; }
-  .hero h1 {
-    font-size: clamp(36px, 6vw, 64px);
-    font-weight: 800;
-    color: ${PRIMARY};
-    line-height: 1.1;
-    letter-spacing: -0.03em;
-  }
-  .hero p {
-    font-size: clamp(17px, 2vw, 21px);
-    color: ${MUTED_FG};
-    max-width: 560px; margin: 0 auto 36px;
-    line-height: 1.6;
-  }
-
-  /* Blobs */
-  .blobs {
-    position: fixed; inset: 0;
-    overflow: hidden; pointer-events: none; z-index: 0;
-  }
-  .blob {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(80px);
-  }
-
-  /* Stat card */
-  .stat-card {
-    background: ${CARD};
-    border: 1px solid ${BORDER};
-    border-radius: 14px;
-    padding: 20px;
-    text-align: center;
-    box-shadow: 0 1px 4px rgba(31,4,51,0.05);
-  }
-  .stat-number {
-    font-size: 32px; font-weight: 800;
-    color: ${PRIMARY};
-    letter-spacing: -0.03em;
-  }
-  .stat-label { font-size: 13px; color: ${MUTED_FG}; margin-top: 4px; }
-
-  /* Checklist */
-  .check-item {
-    display: flex; align-items: flex-start; gap: 10px;
-    font-size: 14px; color: ${MUTED_FG};
-    margin-bottom: 10px;
-  }
-  .check-icon { color: ${PRIMARY}; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-
-  /* Testimonial */
-  .testimonial-card {
-    background: ${CARD};
-    border: 1px solid ${BORDER};
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 1px 4px rgba(31,4,51,0.05);
-  }
-  .testimonial-quote { font-size: 15px; color: ${FG}; line-height: 1.6; margin-bottom: 16px; font-style: italic; }
-  .testimonial-author { font-size: 13px; font-weight: 600; color: ${PRIMARY}; }
-  .testimonial-role { font-size: 12px; color: ${MUTED_FG}; }
-
-  /* FAQ */
-  .faq-item {
-    border-bottom: 1px solid ${BORDER};
-    padding: 20px 0;
-  }
-  .faq-q { font-size: 16px; font-weight: 600; color: ${FG}; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-  .faq-a { font-size: 14px; color: ${MUTED_FG}; margin-top: 12px; line-height: 1.7; }
-
-  /* Footer */
-  footer {
-    position: relative;
-    padding: 48px 24px;
-    border-top: 1px solid ${BORDER};
-    background: rgba(245,244,246,0.5);
-    text-align: center;
-  }
-
-  /* Logo SVG mark */
-  .logo-mark { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-  .logo-text { font-size: 20px; font-weight: 800; color: ${PRIMARY}; letter-spacing: -0.03em; }
-  .logo-text span { opacity: 0.5; font-weight: 400; }
-
-  @media (max-width: 640px) {
-    .hide-mobile { display: none !important; }
-    .section-title { font-size: 30px; }
-    .hero h1 { font-size: 34px; }
-    .btn-row { flex-direction: column; align-items: stretch; }
-  }
-
-  /* RTL Specifics */
-  [dir="rtl"] .logo-mark { flex-direction: row-reverse; }
-  [dir="rtl"] .header-inner { flex-direction: row-reverse; }
-  [dir="rtl"] nav { flex-direction: row-reverse; }
-  [dir="rtl"] .btn-row { flex-direction: row-reverse; }
-  [dir="rtl"] .check-item { flex-direction: row-reverse; }
-  [dir="rtl"] .faq-q { flex-direction: row-reverse; }
-  [dir="rtl"] .card-body p, [dir="rtl"] .card-body h3 { text-align: right; }
-  [dir="rtl"] .check-item span { text-align: right; }
-  [dir="rtl"] .testimonial-card { text-align: right; }
-  [dir="rtl"] .faq-a { text-align: right; }
-`;
+import {
+  Zap, ArrowRight, ShieldCheck, CreditCard,
+  BarChart3, RefreshCw, BellRing, Smartphone,
+  CheckCircle2, Plus
+} from 'lucide-react';
 
 const Logo = () => (
-  <div className="logo-mark">
+  <div style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+    <img src="/logo-white.png" alt="SubTrack" style={{ height: 48, width: 'auto' }} />
+  </div>
+);
+
+const LogoDark = () => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
     <svg width="32" height="32" viewBox="0 0 46 32" fill="none">
       <circle cx="13" cy="16" r="13" fill="#A855F7" opacity="0.5" />
       <circle cx="33" cy="16" r="13" fill="#9333EA" opacity="0.7" />
       <circle cx="23" cy="16" r="10" fill="#7C3AED" opacity="1" />
     </svg>
-    <span className="logo-text">Sub<span>Track</span></span>
+    <span style={{ fontSize: 22, fontWeight: 800, color: '#1F0433', letterSpacing: '-0.03em' }}>
+      Sub<span style={{ opacity: 0.5, fontWeight: 400 }}>Track</span>
+    </span>
   </div>
 );
 
-
 export default function SubTrackLanding() {
   const { t } = useLanguage();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [activeSlide, setActiveSlide] = useState(1);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  const FEATURES = [
-    { icon: "📥", cls: "icon-plum", title: t('land_feat1_title'), desc: t('land_feat1_desc') },
-    { icon: "🔔", cls: "icon-orange", title: t('land_feat2_title'), desc: t('land_feat2_desc') },
-    { icon: "👤", cls: "icon-blue", title: t('land_feat3_title'), desc: t('land_feat3_desc') },
-    { icon: "📊", cls: "icon-green", title: t('land_feat4_title'), desc: t('land_feat4_desc') },
-    { icon: "💱", cls: "icon-amber", title: t('land_feat5_title'), desc: t('land_feat5_desc') },
-    { icon: "💬", cls: "icon-purple", title: t('land_feat6_title'), desc: t('land_feat6_desc') },
-  ];
-
-  const STEPS = [
-    { icon: "🏢", cls: "icon-blue", n: "1", title: t('land_step1_title'), desc: t('land_step1_desc') },
-    { icon: "➕", cls: "icon-emerald", n: "2", title: t('land_step2_title'), desc: t('land_step2_desc') },
-    { icon: "⚡", cls: "icon-amber", n: "3", title: t('land_step3_title'), desc: t('land_step3_desc') },
-  ];
-
-  const PRICING = [
-    {
-      title: t('land_price_free'),
-      price: "$0",
-      period: t('land_price_mo'),
-      desc: t('land_price_free_desc'),
-      features: [t('land_price_free_f1'), t('land_price_free_f2'), t('land_price_free_f3'), t('land_price_free_f4')],
-      cta: t('land_price_free_cta'),
-      featured: false,
-    },
-    {
-      title: t('land_price_pro'),
-      price: "$29",
-      period: t('land_price_mo'),
-      desc: t('land_price_pro_desc'),
-      badge: t('land_price_popular'),
-      features: [t('land_price_pro_f1'), t('land_price_pro_f2'), t('land_price_pro_f3'), t('land_price_pro_f4'), t('land_price_pro_f5'), t('land_price_pro_f6')],
-      cta: t('land_price_pro_cta'),
-      featured: true,
-    },
-    {
-      title: t('land_price_biz'),
-      price: "$49",
-      period: t('land_price_mo'),
-      desc: t('land_price_biz_desc'),
-      features: [t('land_price_biz_f1'), t('land_price_biz_f2'), t('land_price_biz_f3'), t('land_price_biz_f4'), t('land_price_biz_f5')],
-      cta: t('land_price_biz_cta'),
-      featured: false,
-    },
-  ];
-
-  const TESTIMONIALS = [
-    { quote: t('land_test1_q'), name: t('land_test1_a'), role: t('land_test1_r') },
-    { quote: t('land_test2_q'), name: t('land_test2_a'), role: t('land_test2_r') },
-    { quote: t('land_test3_q'), name: t('land_test3_a'), role: t('land_test3_r') },
-  ];
+  const slideCount = 3;
 
   const FAQS = [
     { q: t('land_faq1_q'), a: t('land_faq1_a') },
@@ -402,219 +45,342 @@ export default function SubTrackLanding() {
     { q: t('land_faq5_q'), a: t('land_faq5_a') },
   ];
 
-
   return (
-    <>
-      <style>{CSS}</style>
+    <div className="antialiased font-body" style={{ color: '#1D1F1E', backgroundColor: '#FFFFFF' }}>
+      {/* HEADER & HERO SECTION */}
+      <section className="relative" style={{ backgroundColor: '#1F0433' }}>
+        <img className="absolute top-0 left-0 w-full h-full object-cover" src="/fauna-assets/headers/bg-waves.png" alt="" />
 
-      {/* Blobs */}
-      <div className="blobs">
-        <div className="blob animate-float" style={{ top: 0, left: "25%", width: 384, height: 384, background: "rgba(192,214,234,0.3)", animationDelay: "0s" }} />
-        <div className="blob animate-float" style={{ bottom: 0, right: "25%", width: 384, height: 384, background: "rgba(221,255,85,0.18)", animationDelay: "2s" }} />
-        <div className="blob animate-float" style={{ top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 256, height: 256, background: "rgba(31,4,51,0.07)", animationDelay: "4s" }} />
-      </div>
+        <nav className="py-6 position-relative z-10">
+          <div className="container mx-auto px-4">
+            <div className="relative flex items-center justify-between">
+              <Link className="inline-block" href="/">
+                <Logo />
+              </Link>
+              <ul className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 hidden md:flex">
+                <li className="mr-8"><a className="inline-block text-white hover:text-purple-400 font-medium transition duration-200" href="#solutions">{t('land_nav_features')}</a></li>
+                <li className="mr-8"><a className="inline-block text-white hover:text-purple-400 font-medium transition duration-200" href="#how">{t('land_nav_how')}</a></li>
+                <li className="mr-8"><a className="inline-block text-white hover:text-purple-400 font-medium transition duration-200" href="#pricing">{t('land_nav_pricing')}</a></li>
+              </ul>
+              <div className="flex items-center justify-end gap-4">
+                <LanguageSwitcher />
+                <div className="hidden md:block">
+                  <Link href="/login" className="inline-flex py-2 px-4 items-center justify-center text-sm font-medium text-white hover:text-purple-300 transition duration-200">
+                    {t('land_nav_login')}
+                  </Link>
+                  <Link href="/signup" className="inline-flex group py-2 px-4 items-center justify-center text-sm font-medium text-white hover:text-[#1F0433] border border-white hover:bg-white rounded-full transition duration-200 ml-2">
+                    <span className="mr-2">{t('land_nav_get_started')}</span>
+                    <span className="transform group-hover:translate-x-0.5 transition-transform duration-200">
+                      <ArrowRight size={16} />
+                    </span>
+                  </Link>
+                </div>
+                <button className="md:hidden text-white hover:text-purple-400" onClick={() => setMobileNavOpen(!mobileNavOpen)}>
+                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5.19995 23.2H26.7999" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
+                    <path d="M5.19995 16H26.7999" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
+                    <path d="M5.19995 8.79999H26.7999" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </nav>
 
-      {/* Page gradient bg */}
-      <div style={{ position: "fixed", inset: 0, zIndex: -1, background: "linear-gradient(135deg, #F6F2E8 0%, rgba(197,192,201,0.2) 50%, rgba(192,214,234,0.3) 100%)" }} />
+        <div className="relative pt-18 pb-24 sm:pb-32 lg:pt-36 lg:pb-62">
+          <div className="container mx-auto px-4 relative">
+            <div className="max-w-xl xl:max-w-2xl mx-auto text-center" style={{ animation: 'fade-in 0.8s ease-out' }}>
+              <div className="inline-flex items-center gap-2 px-3 py-1 mb-8 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#A855F7' }}></span>
+                <span className="text-sm font-medium text-white">{t('land_hero_badge')}</span>
+              </div>
+              <h1 className="text-5xl xs:text-6xl xl:text-7xl tracking-tight text-white mb-8 font-bold" style={{ lineHeight: 1.1 }}>
+                {t('land_hero_title')}
+              </h1>
+              <p className="max-w-md xl:max-w-none text-lg text-white opacity-80 mb-10 mx-auto">
+                {t('land_hero_desc')}
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link className="inline-flex w-full sm:w-auto py-4 px-8 items-center justify-center text-lg font-medium text-white border border-[#A855F7] hover:border-white rounded-full transition duration-300" style={{ backgroundColor: '#A855F7' }} href="/signup">
+                  {t('land_hero_cta')}
+                </Link>
+                <a className="inline-flex w-full sm:w-auto py-4 px-8 items-center justify-center text-lg font-medium text-white border border-white hover:bg-white hover:text-[#1F0433] rounded-full transition duration-300" href="#solutions">
+                  {t('land_hero_cta2')}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      {/* Header */}
-      <header>
-        <div className="header-inner">
-          <Logo />
-          <nav className="hide-mobile" style={{ display: "flex", gap: 32 }}>
-            <a href="#features">{t('land_nav_features')}</a>
-            <a href="#how">{t('land_nav_how')}</a>
-            <a href="#pricing">{t('land_nav_pricing')}</a>
+        {/* Mobile Nav Overlay */}
+        <div className="md:hidden" style={{ pointerEvents: mobileNavOpen ? 'auto' : 'none', zIndex: 50, position: 'relative' }}>
+          {/* Backdrop */}
+          <div
+            onClick={() => setMobileNavOpen(false)}
+            style={{
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+              backgroundColor: 'rgba(31, 4, 51, 0.5)', zIndex: 40,
+              opacity: mobileNavOpen ? 1 : 0, transition: 'opacity 0.3s ease',
+              pointerEvents: mobileNavOpen ? 'auto' : 'none'
+            }}
+          />
+          {/* Sidebar */}
+          <nav
+            className="fixed top-0 left-0 bottom-0 bg-white z-50 flex flex-col py-6 px-6 overflow-y-auto shadow-2xl"
+            style={{
+              width: '85%', maxWidth: '320px',
+              transform: mobileNavOpen ? 'translateX(0)' : 'translateX(-100%)',
+              transition: 'transform 0.3s ease',
+              borderRight: '1px solid #E8E4EB'
+            }}
+          >
+            <div className="flex items-center justify-between mb-8">
+              <Link className="inline-block" href="/" onClick={() => setMobileNavOpen(false)}>
+                <LogoDark />
+              </Link>
+              <button
+                onClick={() => setMobileNavOpen(false)}
+                className="p-2 -mr-2 text-gray-400 hover:text-[#1F0433] transition-colors rounded-full hover:bg-gray-100"
+              >
+                <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M23.2 8.79999L8.80005 23.2M8.80005 8.79999L23.2 23.2" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"></path>
+                </svg>
+              </button>
+            </div>
+
+            <div className="mb-auto">
+              <ul className="flex flex-col space-y-4">
+                <li><a className="block py-2 text-[#1F0433] hover:text-[#A855F7] font-medium text-lg transition-colors" href="#solutions" onClick={() => setMobileNavOpen(false)}>{t('land_nav_features')}</a></li>
+                <li><a className="block py-2 text-[#1F0433] hover:text-[#A855F7] font-medium text-lg transition-colors" href="#how" onClick={() => setMobileNavOpen(false)}>{t('land_nav_how')}</a></li>
+                <li><a className="block py-2 text-[#1F0433] hover:text-[#A855F7] font-medium text-lg transition-colors" href="#pricing" onClick={() => setMobileNavOpen(false)}>{t('land_nav_pricing')}</a></li>
+              </ul>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col space-y-4">
+              <Link className="flex w-full py-3 px-4 items-center justify-center text-base font-medium text-[#1F0433] hover:bg-gray-50 border border-gray-200 rounded-xl transition duration-200" href="/login" onClick={() => setMobileNavOpen(false)}>
+                {t('land_nav_login')}
+              </Link>
+              <Link href="/signup" onClick={() => setMobileNavOpen(false)} className="flex w-full py-3 px-4 items-center justify-center text-base font-medium text-white shadow-md rounded-xl transition duration-200 hover:shadow-lg" style={{ backgroundColor: '#A855F7' }}>
+                {t('land_nav_get_started')}
+              </Link>
+            </div>
           </nav>
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <LanguageSwitcher />
-            <Link href="/login" className="btn btn-ghost btn-sm hide-mobile">{t('land_nav_login')}</Link>
-            <Link href="/signup" className="btn btn-primary btn-sm">{t('land_nav_get_started')}</Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero */}
-      <section className="hero" style={{ position: "relative", zIndex: 1, paddingTop: 180 }}>
-        <div className="animate-fade-in">
-          <span className="badge">{t('land_hero_badge')}</span>
-        </div>
-        <h1 className="animate-fade-in" style={{ animationDelay: "0.1s", whiteSpace: 'pre-line' }}>
-          {t('land_hero_title')}
-        </h1>
-        <p className="animate-fade-in" style={{ animationDelay: "0.2s" }}>
-          {t('land_hero_desc')}
-        </p>
-        <div className="animate-fade-in btn-row" style={{ display: "flex", gap: 12, justifyContent: "center", animationDelay: "0.3s" }}>
-          <Link href="/signup" className="btn btn-primary btn-lg">{t('land_hero_cta')}</Link>
-          <button className="btn btn-outline btn-lg" onClick={() => document.getElementById("how")?.scrollIntoView({ behavior: "smooth" })}>{t('land_hero_cta2')}</button>
         </div>
       </section>
 
-      {/* Stats */}
-      <section className="section" style={{ zIndex: 1, position: "relative", marginTop: 40 }}>
-        <div className="container">
-          <div className="grid-stats">
-            {[
-              { n: t('land_stat1_n'), l: t('land_stat1_l') },
-              { n: t('land_stat2_n'), l: t('land_stat2_l') },
-              { n: t('land_stat3_n'), l: t('land_stat3_l') },
-              { n: t('land_stat4_n'), l: t('land_stat4_l') },
-            ].map(s => (
-              <div key={s.n as string} className="stat-card">
-                <div className="stat-number">{s.n}</div>
-                <div className="stat-label">{s.l}</div>
-              </div>
-            ))}
+      {/* STATS STRIP */}
+      <section className="py-16 lg:py-24 bg-white">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '24px', width: '100%' }}>
+            <div style={{ backgroundColor: '#FFFFFF', padding: '40px 24px', borderRadius: '24px', border: '1px solid rgba(31, 4, 51, 0.05)', boxShadow: '0 4px 20px -10px rgba(31, 4, 51, 0.1)', textAlign: 'center' }}>
+              <h5 className="text-4xl xl:text-5xl font-bold mb-3" style={{ color: '#1F0433' }}>{t('land_stat1_n')}</h5>
+              <span className="text-sm xl:text-base text-gray-500 font-medium leading-tight block">{t('land_stat1_l')}</span>
+            </div>
+            <div style={{ backgroundColor: '#FFFFFF', padding: '40px 24px', borderRadius: '24px', border: '1px solid rgba(31, 4, 51, 0.05)', boxShadow: '0 4px 20px -10px rgba(31, 4, 51, 0.1)', textAlign: 'center' }}>
+              <h5 className="text-4xl xl:text-5xl font-bold mb-3" style={{ color: '#A855F7' }}>{t('land_stat2_n')}</h5>
+              <span className="text-sm xl:text-base text-gray-500 font-medium leading-tight block">{t('land_stat2_l')}</span>
+            </div>
+            <div style={{ backgroundColor: '#FFFFFF', padding: '40px 24px', borderRadius: '24px', border: '1px solid rgba(31, 4, 51, 0.05)', boxShadow: '0 4px 20px -10px rgba(31, 4, 51, 0.1)', textAlign: 'center' }}>
+              <h5 className="text-4xl xl:text-5xl font-bold mb-3" style={{ color: '#1F0433' }}>{t('land_stat3_n')}</h5>
+              <span className="text-sm xl:text-base text-gray-500 font-medium leading-tight block">{t('land_stat3_l')}</span>
+            </div>
+            <div style={{ backgroundColor: '#FFFFFF', padding: '40px 24px', borderRadius: '24px', border: '1px solid rgba(31, 4, 51, 0.05)', boxShadow: '0 4px 20px -10px rgba(31, 4, 51, 0.1)', textAlign: 'center' }}>
+              <h5 className="text-4xl xl:text-5xl font-bold mb-3" style={{ color: '#A855F7' }}>{t('land_stat4_n')}</h5>
+              <span className="text-sm xl:text-base text-gray-500 font-medium leading-tight block">{t('land_stat4_l')}</span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section id="features" className="section" style={{ zIndex: 1, position: "relative" }}>
-        <div className="container">
-          <div className="text-center">
-            <h2 className="section-title">{t('land_feat_title')}</h2>
-            <p className="section-sub">{t('land_feat_sub')}</p>
-          </div>
-          <div className="grid-3">
-            {FEATURES.map(f => (
-              <div key={f.title as string} className="card">
-                <div className="card-header">
-                  <div className={`icon-box ${f.cls}`}>{f.icon}</div>
-                </div>
-                <div className="card-body">
-                  <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, color: FG }}>{f.title}</h3>
-                  <p style={{ fontSize: 14, color: MUTED_FG, lineHeight: 1.6 }}>{f.desc}</p>
+      {/* SOLUTIONS (FEATURES) BENTO */}
+      <section id="solutions" className="p-4 bg-white mt-12">
+        <div className="pt-16 pb-24 px-5 xs:px-8 xl:px-12 rounded-3xl" style={{ backgroundColor: '#F8F6FA' }}>
+          <div className="container mx-auto px-4">
+            <div className="flex mb-4 items-center">
+              <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="4" cy="4" r="4" fill="#A855F7"></circle>
+              </svg>
+              <span className="inline-block ml-2 text-sm font-bold text-[#A855F7] tracking-wider uppercase">{t('land_feat_title')}</span>
+            </div>
+            <div className="border-t pt-14" style={{ borderColor: 'rgba(31, 4, 51, 0.1)' }}>
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-16 text-center max-w-4xl mx-auto" style={{ color: '#1F0433', letterSpacing: '-0.02em' }}>
+                {t('land_feat_sub')}
+              </h1>
+
+              {/* Dashboard Preview Image */}
+              <div className="relative w-full max-w-6xl mx-auto mb-20 md:mb-32">
+                <div className="absolute inset-0 bg-gradient-to-t from-[#F8F6FA] via-transparent to-transparent z-10 top-1/2"></div>
+                <div className="rounded-2xl md:rounded-[3rem] overflow-hidden border border-gray-200/50 shadow-2xl shadow-purple-900/10">
+                  <img src="/dashboard-preview.png" alt="SubTrack Dashboard" className="w-full h-auto" />
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* How it works */}
-      <section id="how" className="section" style={{ zIndex: 1, position: "relative" }}>
-        <div className="container">
-          <div className="text-center">
-            <h2 className="section-title">{t('land_how_title')}</h2>
-            <p className="section-sub">{t('land_how_sub')}</p>
-          </div>
-          <div className="grid-3">
-            {STEPS.map(s => (
-              <div key={s.title as string} className="card">
-                <div className="card-header-center">
-                  <div className={`icon-box-lg ${s.cls}`}>{s.icon}</div>
-                  <div className="step-num">{s.n}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '32px', position: 'relative', zIndex: 20, marginTop: '-24px' }}>
+                {/* Feature 1 */}
+                <div style={{ backgroundColor: '#FFFFFF', padding: '32px', borderRadius: '24px', boxShadow: '0 10px 40px -10px rgba(31, 4, 51, 0.08)', border: '1px solid rgba(31, 4, 51, 0.05)' }}>
+                  <div style={{ width: '56px', height: '56px', borderRadius: '16px', backgroundColor: 'rgba(168, 85, 247, 0.1)', color: '#A855F7', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
+                    <RefreshCw size={28} />
+                  </div>
+                  <h5 className="text-2xl font-bold mb-3" style={{ color: '#1F0433' }}>{t('land_feat1_title')}</h5>
+                  <p className="text-gray-600 leading-relaxed">{t('land_feat1_desc')}</p>
                 </div>
-                <div className="card-body" style={{ textAlign: "center" }}>
-                  <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, color: FG }}>{s.title}</h3>
-                  <p style={{ fontSize: 14, color: MUTED_FG, lineHeight: 1.6 }}>{s.desc}</p>
+                {/* Feature 2 */}
+                <div style={{ backgroundColor: '#FFFFFF', padding: '32px', borderRadius: '24px', boxShadow: '0 10px 40px -10px rgba(31, 4, 51, 0.08)', border: '1px solid rgba(31, 4, 51, 0.05)' }}>
+                  <div style={{ width: '56px', height: '56px', borderRadius: '16px', backgroundColor: 'rgba(249, 115, 22, 0.1)', color: '#F97316', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
+                    <BellRing size={28} />
+                  </div>
+                  <h5 className="text-2xl font-bold mb-3" style={{ color: '#1F0433' }}>{t('land_feat2_title')}</h5>
+                  <p className="text-gray-600 leading-relaxed">{t('land_feat2_desc')}</p>
+                </div>
+                {/* Feature 3 */}
+                <div style={{ backgroundColor: '#FFFFFF', padding: '32px', borderRadius: '24px', boxShadow: '0 10px 40px -10px rgba(31, 4, 51, 0.08)', border: '1px solid rgba(31, 4, 51, 0.05)' }}>
+                  <div style={{ width: '56px', height: '56px', borderRadius: '16px', backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
+                    <ShieldCheck size={28} />
+                  </div>
+                  <h5 className="text-2xl font-bold mb-3" style={{ color: '#1F0433' }}>{t('land_feat3_title')}</h5>
+                  <p className="text-gray-600 leading-relaxed">{t('land_feat3_desc')}</p>
+                </div>
+                {/* Feature 4 */}
+                <div style={{ backgroundColor: '#FFFFFF', padding: '32px', borderRadius: '24px', boxShadow: '0 10px 40px -10px rgba(31, 4, 51, 0.08)', border: '1px solid rgba(31, 4, 51, 0.05)' }}>
+                  <div style={{ width: '56px', height: '56px', borderRadius: '16px', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
+                    <BarChart3 size={28} />
+                  </div>
+                  <h5 className="text-2xl font-bold mb-3" style={{ color: '#1F0433' }}>{t('land_feat4_title')}</h5>
+                  <p className="text-gray-600 leading-relaxed">{t('land_feat4_desc')}</p>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="section" style={{ zIndex: 1, position: "relative" }}>
-        <div className="container">
-          <div className="text-center">
-            <h2 className="section-title">{t('land_price_title')}</h2>
-            <p className="section-sub">{t('land_price_sub')}</p>
+      {/* HOW IT WORKS */}
+      <section id="how" className="py-20 lg:py-32 overflow-hidden">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto mb-20 text-center">
+            <span className="inline-block mb-4 text-sm font-bold tracking-wider uppercase" style={{ color: '#A855F7' }}>{t('land_how_title')}</span>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-10" style={{ color: '#1F0433', letterSpacing: '-0.02em' }}>
+              {t('land_how_sub')}
+            </h1>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 20, maxWidth: 880, margin: "0 auto" }}>
-            {PRICING.map(p => (
-              <div key={p.title as string} className={p.featured ? "card-featured" : "card-dim"}>
-                <div style={{ padding: "20px 24px 16px", borderBottom: `1px solid ${BORDER}`, background: MUTED, textAlign: "center" }}>
-                  {p.badge && <div style={{ marginBottom: 8 }}><span className="badge-popular">{p.badge}</span></div>}
-                  <div style={{ fontSize: 22, fontWeight: 700, color: FG }}>{p.title}</div>
-                  <div style={{ fontSize: 36, fontWeight: 800, color: p.featured ? PRIMARY : MUTED_FG, letterSpacing: "-0.03em" }}>
-                    {p.price}<span style={{ fontSize: 15, fontWeight: 400 }}>{p.period}</span>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px', maxWidth: '1152px', margin: '0 auto' }}>
+            {/* Step 1 */}
+            <div style={{ backgroundColor: '#FFFFFF', padding: '40px', borderRadius: '24px', border: '1px solid #E8E4EB', boxShadow: '0 4px 24px rgba(31,4,51,0.04)' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#1F0433', color: 'white', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', marginBottom: '24px', fontWeight: 'bold', fontSize: '18px' }}>1</div>
+              <h3 className="text-2xl font-bold mb-4" style={{ color: '#1F0433' }}>{t('land_step1_title')}</h3>
+              <p className="text-gray-600 leading-relaxed">{t('land_step1_desc')}</p>
+            </div>
+            {/* Step 2 */}
+            <div style={{ backgroundColor: '#FFFFFF', padding: '40px', borderRadius: '24px', border: '1px solid #E8E4EB', boxShadow: '0 4px 24px rgba(31,4,51,0.04)' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#1F0433', color: 'white', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', marginBottom: '24px', fontWeight: 'bold', fontSize: '18px' }}>2</div>
+              <h3 className="text-2xl font-bold mb-4" style={{ color: '#1F0433' }}>{t('land_step2_title')}</h3>
+              <p className="text-gray-600 leading-relaxed">{t('land_step2_desc')}</p>
+            </div>
+            {/* Step 3 */}
+            <div style={{ backgroundColor: '#FFFFFF', padding: '40px', borderRadius: '24px', border: '1px solid #E8E4EB', boxShadow: '0 4px 24px rgba(31,4,51,0.04)' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#1F0433', color: 'white', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', marginBottom: '24px', fontWeight: 'bold', fontSize: '18px' }}>3</div>
+              <h3 className="text-2xl font-bold mb-4" style={{ color: '#1F0433' }}>{t('land_step3_title')}</h3>
+              <p className="text-gray-600 leading-relaxed">{t('land_step3_desc')}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ SECTION */}
+      <section className="py-16 lg:py-24" style={{ backgroundColor: '#F8F6FA' }}>
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <span className="inline-block mb-4 text-sm font-bold tracking-wider uppercase" style={{ color: '#A855F7' }}>{t('land_faq_title')}</span>
+            <h1 className="text-4xl md:text-5xl font-bold mb-6" style={{ color: '#1F0433', letterSpacing: '-0.02em' }}>{t('land_faq_sub')}</h1>
+          </div>
+
+          <div className="max-w-3xl mx-auto">
+            {FAQS.map((faq, idx) => (
+              <button key={idx} className="flex w-full py-6 px-8 mb-4 items-start justify-between text-left shadow-sm rounded-2xl bg-white border border-gray-100 transition duration-200 hover:border-purple-200" onClick={(e) => { e.preventDefault(); setOpenFaq(openFaq === idx ? null : idx); }}>
+                <div>
+                  <div className="pr-5">
+                    <h5 className="text-lg font-bold" style={{ color: '#1F0433' }}>{faq.q}</h5>
+                  </div>
+                  <div style={{
+                    overflow: 'hidden',
+                    transition: 'all 0.3s ease',
+                    maxHeight: openFaq === idx ? '500px' : '0px',
+                    opacity: openFaq === idx ? 1 : 0,
+                    marginTop: openFaq === idx ? '16px' : '0px'
+                  }}>
+                    <p className="text-gray-600 leading-relaxed pr-5">{faq.a}</p>
                   </div>
                 </div>
-                <div style={{ padding: 24 }}>
-                  <p style={{ fontSize: 14, color: MUTED_FG, marginBottom: 16, textAlign: "center" }}>{p.desc}</p>
-                  {p.features.map(f => (
-                    <div key={f as string} className="check-item">
-                      <span className="check-icon">✓</span>
-                      <span>{f}</span>
-                    </div>
-                  ))}
-                  <button className={`btn ${p.featured ? "btn-primary" : "btn-outline"} btn-full`} style={{ marginTop: 20 }}>
-                    {p.cta}
-                  </button>
+                <span className="flex-shrink-0 mt-1">
+                  <div style={{
+                    transition: 'transform 0.3s ease',
+                    transform: openFaq === idx ? 'rotate(45deg)' : 'rotate(0deg)',
+                    color: openFaq === idx ? '#A855F7' : '#9CA3AF'
+                  }}>
+                    <Plus size={24} />
+                  </div>
+                </span>
+              </button>
+            ))}
+
+            <div className="sm:flex py-10 px-6 sm:px-10 rounded-2xl mt-12 items-center" style={{ backgroundColor: '#1F0433' }}>
+              <div className="mb-6 sm:mb-0 sm:mr-8 flex-shrink-0">
+                <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(168, 85, 247, 0.2)', color: '#A855F7' }}>
+                  <Smartphone size={32} />
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="section" style={{ zIndex: 1, position: "relative" }}>
-        <div className="container">
-          <div className="text-center">
-            <h2 className="section-title">{t('land_test_title')}</h2>
-            <p className="section-sub">{t('land_test_sub')}</p>
-          </div>
-          <div className="grid-3">
-            {TESTIMONIALS.map(t => (
-              <div key={t.name as string} className="testimonial-card">
-                <p className="testimonial-quote">"{t.quote}"</p>
-                <div className="testimonial-author">{t.name}</div>
-                <div className="testimonial-role">{t.role}</div>
+              <div>
+                <h5 className="text-xl font-bold mb-3 text-white">Still have questions?</h5>
+                <p className="text-gray-300 leading-relaxed">
+                  Support is available 24/7 for all our users. Check out our detailed documentation inside the app or chat with our team directly.
+                </p>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="section" style={{ zIndex: 1, position: "relative" }}>
-        <div className="container" style={{ maxWidth: 680 }}>
-          <div className="text-center">
-            <h2 className="section-title">{t('land_faq_title')}</h2>
-            <p className="section-sub">{t('land_faq_sub')}</p>
-          </div>
-          {FAQS.map((f, i) => (
-            <div key={i} className="faq-item">
-              <div className="faq-q" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
-                <span>{f.q}</span>
-                <span style={{ fontSize: 20, color: MUTED_FG }}>{openFaq === i ? "−" : "+"}</span>
-              </div>
-              {openFaq === i && <p className="faq-a">{f.a}</p>}
             </div>
-          ))}
+          </div>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="section" style={{ paddingBottom: 120, zIndex: 1, position: "relative" }}>
-        <div className="container">
-          <div className="card" style={{ padding: "64px 48px", textAlign: "center" }}>
-            <span className="badge" style={{ marginBottom: 20 }}>{t('land_cta_badge')}</span>
-            <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, color: FG, margin: "0 auto 16px", letterSpacing: "-0.025em", whiteSpace: "pre-line" }}>
-              {t('land_cta_title')}
-            </h2>
-            <p style={{ fontSize: 17, color: MUTED_FG, maxWidth: 480, margin: "0 auto 32px", lineHeight: 1.6 }}>
-              {t('land_cta_desc')}
+      {/* FINAL CTA ENCLOSURE */}
+      <section className="py-20 lg:py-32 px-4 relative bg-white">
+        <div className="max-w-5xl mx-auto text-center relative overflow-hidden" style={{ backgroundColor: '#1F0433', padding: '80px 40px', borderRadius: '32px', boxShadow: '0 20px 60px -15px rgba(168, 85, 247, 0.2)' }}>
+          {/* Decorative gradients */}
+          <div className="absolute top-0 left-0 w-full h-full overflow-hidden rounded-[32px] pointer-events-none">
+            <div style={{ position: 'absolute', top: '-50%', left: '-10%', width: '50%', height: '100%', background: 'radial-gradient(circle, rgba(168,85,247,0.15) 0%, rgba(31,4,51,0) 70%)' }}></div>
+            <div style={{ position: 'absolute', bottom: '-50%', right: '-10%', width: '50%', height: '100%', background: 'radial-gradient(circle, rgba(147,51,234,0.15) 0%, rgba(31,4,51,0) 70%)' }}></div>
+          </div>
+          <div className="relative z-10">
+            <h1 className="text-4xl sm:text-5xl font-bold mb-6 tracking-tight text-white" style={{ letterSpacing: '-0.02em' }}>
+              Stop paying for software nobody uses
+            </h1>
+            <p className="text-xl mb-12 max-w-2xl mx-auto leading-relaxed text-purple-200">
+              Join hundreds of teams already using SubTrack to cut SaaS waste and take back control of their budgets.
             </p>
-            <div className="btn-row" style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-              <Link href="/signup" className="btn btn-primary btn-lg">{t('land_cta_btn1')}</Link>
-              <button className="btn btn-outline btn-lg" onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}>{t('land_cta_btn2')}</button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link
+                className="inline-flex w-full sm:w-auto py-4 px-10 items-center justify-center text-lg font-bold text-white hover:text-[#1F0433] rounded-full transition-all duration-300 shadow-lg border border-[#A855F7] hover:bg-white"
+                style={{ backgroundColor: '#A855F7' }}
+                href="/signup"
+              >
+                Get early access 🚀
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer style={{ zIndex: 1, position: "relative" }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><Logo /></div>
-        <p style={{ fontSize: 14, color: MUTED_FG, marginBottom: 8 }}>{t('land_footer_desc')}</p>
-        <p style={{ fontSize: 13, color: MUTED_FG }}>{t('land_footer_copy')}</p>
-      </footer>
-    </>
+      {/* FOOTER */}
+      <section className="relative py-12 lg:py-20 bg-white overflow-hidden">
+        <img className="absolute bottom-0 left-0 opacity-5" src="/fauna-assets/footer/waves-lines-left-bottom.png" alt="" />
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex flex-col items-center justify-center">
+            <LogoDark />
+            <p className="text-gray-500 mt-6 mb-2 text-center max-w-sm">{t('land_footer_desc')}</p>
+            <p className="text-sm text-gray-400">© 2026 SubTrack. {t('land_footer_copy')}</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
   );
 }

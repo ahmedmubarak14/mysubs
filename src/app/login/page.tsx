@@ -55,8 +55,15 @@ export default function LoginPage() {
             </div>
             <div className={styles.authRight}>
                 <div className={styles.authBrand}>
-                    <Link href="/">
-                        <img src="/SubTrack/logo-light.png" alt="Subtrack" className="sidebar-logo-img" style={{ height: 32, width: 'auto', cursor: 'pointer' }} />
+                    <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+                        <svg width="32" height="32" viewBox="0 0 46 32" fill="none">
+                            <circle cx="13" cy="16" r="13" fill="#A855F7" opacity="0.5" />
+                            <circle cx="33" cy="16" r="13" fill="#9333EA" opacity="0.7" />
+                            <circle cx="23" cy="16" r="10" fill="#7C3AED" opacity="1" />
+                        </svg>
+                        <span style={{ fontSize: 22, fontWeight: 800, color: '#1F0433', letterSpacing: '-0.03em' }}>
+                            Sub<span style={{ opacity: 0.5, fontWeight: 400 }}>Track</span>
+                        </span>
                     </Link>
                 </div>
                 <div className={styles.authCard}>
