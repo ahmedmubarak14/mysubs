@@ -29,6 +29,7 @@ export default function Sidebar({ profile, onToggleNotifications, onClose }: Sid
         { href: '/dashboard/expenses', label: t('nav_expenses'), icon: DollarSign },
         { href: '/dashboard/calendar', label: t('nav_calendar'), icon: Calendar },
         { href: '/dashboard/team', label: t('nav_team'), icon: Users },
+        { href: '/dashboard/integrations', label: t('nav_integrations'), icon: Zap },
     ];
 
     const handleLogout = async () => {
