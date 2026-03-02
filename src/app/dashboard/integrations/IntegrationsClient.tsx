@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import Topbar from '@/components/Topbar';
 import { useNotifications } from '@/components/NotificationsContext';
-import { CheckCircle2, Circle, ExternalLink, Search } from 'lucide-react';
+import { CheckCircle2, Circle, ExternalLink, Search, X, Loader2, AlertCircle } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 // ── Brand SVG Icons ──────────────────────────────────────────────────────────
 
@@ -49,16 +50,14 @@ const GithubIcon = () => (
 const JiraIcon = () => (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
         <path d="M11.571 11.513H0a5.218 5.218 0 0 0 5.232 5.215h2.13v2.057A5.215 5.215 0 0 0 12.575 24V12.518a1.005 1.005 0 0 0-1.004-1.005z" fill="#2684FF" />
-        <path d="M6.208 6.337H17.77a5.215 5.215 0 0 1-5.215-5.215H6.207a1.004 1.004 0 0 0-1.004 1.005V7.68a5.217 5.217 0 0 0 5.215 5.198h2.136v2.057A5.215 5.215 0 0 0 17.77 20.15V7.34a1.003 1.003 0 0 0-1.003-1.003H6.208z" fill="url(#jira-grad1)" />
-        <path d="M11.993 1.122H23.556A5.215 5.215 0 0 1 18.34 6.337h-2.135v2.057A5.213 5.213 0 0 1 11.993 12.605V2.127a1.005 1.005 0 0 1 1.004-1.005H11.993z" fill="url(#jira-grad2)" />
+        <path d="M6.208 6.337H17.77a5.215 5.215 0 0 1-5.215-5.215H6.207a1.004 1.004 0 0 0-1.004 1.005V7.68a5.217 5.217 0 0 0 5.215 5.198h2.136v2.057A5.215 5.215 0 0 0 17.77 20.15V7.34a1.003 1.003 0 0 0-1.003-1.003H6.208z" fill="url(#jg1)" />
+        <path d="M11.993 1.122H23.556A5.215 5.215 0 0 1 18.34 6.337h-2.135v2.057A5.213 5.213 0 0 1 11.993 12.605V2.127a1.005 1.005 0 0 1 1.004-1.005H11.993z" fill="url(#jg2)" />
         <defs>
-            <linearGradient id="jira-grad1" x1="17.52" y1="6.41" x2="12.25" y2="11.68" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#0052CC" />
-                <stop offset="100%" stopColor="#2684FF" />
+            <linearGradient id="jg1" x1="17.52" y1="6.41" x2="12.25" y2="11.68" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#0052CC" /><stop offset="100%" stopColor="#2684FF" />
             </linearGradient>
-            <linearGradient id="jira-grad2" x1="12.25" y1="1.2" x2="17.52" y2="6.47" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#0052CC" />
-                <stop offset="100%" stopColor="#2684FF" />
+            <linearGradient id="jg2" x1="12.25" y1="1.2" x2="17.52" y2="6.47" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#0052CC" /><stop offset="100%" stopColor="#2684FF" />
             </linearGradient>
         </defs>
     </svg>
@@ -76,222 +75,359 @@ const PagerDutyIcon = () => (
     </svg>
 );
 
-// ── Integration Data ──────────────────────────────────────────────────────────
+// ── Integration Definitions ───────────────────────────────────────────────────
 
-interface Integration {
-    id: string;
+type IntegrationType = 'slack' | 'telegram' | 'discord' | 'whatsapp' | 'github' | 'jira' | 'zapier' | 'pagerduty';
+
+interface IntegrationDef {
+    id: IntegrationType;
     name: string;
     desc: string;
     icon: React.FC;
     category: string;
     docsUrl?: string;
     badge?: 'popular' | 'new';
+    fields: IntegrationField[];
 }
 
-const INTEGRATIONS: Integration[] = [
-    // Communication
-    { id: 'slack', name: 'Slack', desc: 'Get renewal alerts and budget reports directly in your Slack channels.', icon: SlackIcon, category: 'Communication', docsUrl: 'https://slack.com', badge: 'popular' },
-    { id: 'telegram', name: 'Telegram', desc: 'Receive instant notifications via Telegram bot.', icon: TelegramIcon, category: 'Communication', docsUrl: 'https://telegram.org' },
-    { id: 'discord', name: 'Discord', desc: 'Post subscription updates to any Discord server channel.', icon: DiscordIcon, category: 'Communication', docsUrl: 'https://discord.com' },
-    { id: 'whatsapp', name: 'WhatsApp', desc: 'Send WhatsApp alerts when a subscription is about to renew.', icon: WhatsAppIcon, category: 'Communication', badge: 'new' },
-    // Developer Tools
-    { id: 'github', name: 'GitHub', desc: 'Link subscriptions to repos and track dev tool spending per project.', icon: GithubIcon, category: 'Developer Tools', docsUrl: 'https://github.com' },
-    { id: 'jira', name: 'Jira', desc: 'Sync team changes with Jira boards and create tickets automatically.', icon: JiraIcon, category: 'Developer Tools', docsUrl: 'https://atlassian.com/jira' },
-    // Automation
-    { id: 'zapier', name: 'Zapier', desc: 'Automate workflows with 5,000+ apps using Zapier triggers.', icon: ZapierIcon, category: 'Automation', docsUrl: 'https://zapier.com', badge: 'popular' },
-    { id: 'pagerduty', name: 'PagerDuty', desc: 'Escalate critical renewal and budget alerts through PagerDuty.', icon: PagerDutyIcon, category: 'Automation', docsUrl: 'https://pagerduty.com' },
+interface IntegrationField {
+    key: 'webhook_url' | 'bot_token' | 'chat_id';
+    label: string;
+    placeholder: string;
+    hint?: string;
+}
+
+const INTEGRATIONS: IntegrationDef[] = [
+    {
+        id: 'slack', name: 'Slack',
+        desc: 'Get renewal alerts and budget reports directly in your Slack channels.',
+        icon: SlackIcon, category: 'Communication', docsUrl: 'https://api.slack.com/messaging/webhooks', badge: 'popular',
+        fields: [{ key: 'webhook_url', label: 'Incoming Webhook URL', placeholder: 'https://hooks.slack.com/services/...', hint: 'Create one at api.slack.com → Your Apps → Incoming Webhooks' }],
+    },
+    {
+        id: 'telegram', name: 'Telegram',
+        desc: 'Receive instant notifications via Telegram bot.',
+        icon: TelegramIcon, category: 'Communication', docsUrl: 'https://core.telegram.org/bots',
+        fields: [
+            { key: 'bot_token', label: 'Bot Token', placeholder: '123456:ABC-DEF...', hint: 'Get from @BotFather on Telegram' },
+            { key: 'chat_id', label: 'Chat ID', placeholder: '-1001234567890', hint: 'Use @userinfobot to find your chat ID' },
+        ],
+    },
+    {
+        id: 'discord', name: 'Discord',
+        desc: 'Post subscription updates to any Discord server channel.',
+        icon: DiscordIcon, category: 'Communication', docsUrl: 'https://discord.com/developers/docs/resources/webhook',
+        fields: [{ key: 'webhook_url', label: 'Webhook URL', placeholder: 'https://discord.com/api/webhooks/...', hint: 'Create in your Discord channel settings → Integrations → Webhooks' }],
+    },
+    {
+        id: 'whatsapp', name: 'WhatsApp',
+        desc: 'Send WhatsApp alerts when a subscription is about to renew.',
+        icon: WhatsAppIcon, category: 'Communication', badge: 'new',
+        fields: [{ key: 'webhook_url', label: 'WhatsApp API Webhook URL', placeholder: 'https://...', hint: 'Requires WhatsApp Business API access' }],
+    },
+    {
+        id: 'github', name: 'GitHub',
+        desc: 'Link subscriptions to repos and track dev tool spending per project.',
+        icon: GithubIcon, category: 'Developer Tools', docsUrl: 'https://github.com',
+        fields: [{ key: 'webhook_url', label: 'GitHub Webhook URL (optional)', placeholder: 'https://...', hint: 'For receiving GitHub events' }],
+    },
+    {
+        id: 'jira', name: 'Jira',
+        desc: 'Sync team changes with Jira boards and create tickets automatically.',
+        icon: JiraIcon, category: 'Developer Tools', docsUrl: 'https://developer.atlassian.com/',
+        fields: [{ key: 'webhook_url', label: 'Jira Webhook URL', placeholder: 'https://yourorg.atlassian.net/...', hint: 'Set up in Jira System → Webhooks' }],
+    },
+    {
+        id: 'zapier', name: 'Zapier',
+        desc: 'Automate workflows with 5,000+ apps using Zapier triggers.',
+        icon: ZapierIcon, category: 'Automation', docsUrl: 'https://zapier.com/apps/webhook', badge: 'popular',
+        fields: [{ key: 'webhook_url', label: 'Zapier Webhook URL', placeholder: 'https://hooks.zapier.com/hooks/catch/...', hint: 'From a Zapier Zap using the Webhooks app' }],
+    },
+    {
+        id: 'pagerduty', name: 'PagerDuty',
+        desc: 'Escalate critical renewal and budget alerts through PagerDuty.',
+        icon: PagerDutyIcon, category: 'Automation', docsUrl: 'https://developer.pagerduty.com/',
+        fields: [{ key: 'webhook_url', label: 'PagerDuty Events API URL', placeholder: 'https://events.pagerduty.com/...', hint: 'From PagerDuty → Services → Integrations → Events API v2' }],
+    },
 ];
 
 const CATEGORY_ORDER = ['Communication', 'Developer Tools', 'Automation'];
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
+interface DbIntegration {
+    id: string;
+    type: IntegrationType;
+    webhook_url?: string;
+    bot_token?: string;
+    chat_id?: string;
+    enabled: boolean;
+}
 
+// ── Component ─────────────────────────────────────────────────────────────────
 export default function IntegrationsClient() {
     const { t } = useLanguage();
     const { openPanel } = useNotifications();
-    const [connected, setConnected] = useState<Set<string>>(new Set());
+    const supabase = createClient();
+
+    const [dbIntegrations, setDbIntegrations] = useState<DbIntegration[]>([]);
+    const [orgId, setOrgId] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
 
-    const toggle = (id: string) =>
-        setConnected(prev => {
-            const next = new Set(prev);
-            if (next.has(id)) next.delete(id); else next.add(id);
-            return next;
-        });
+    // Connect modal state
+    const [modalIntegration, setModalIntegration] = useState<IntegrationDef | null>(null);
+    const [modalValues, setModalValues] = useState<Record<string, string>>({});
+    const [modalSaving, setModalSaving] = useState(false);
+    const [modalError, setModalError] = useState('');
+
+    // Load data
+    const loadIntegrations = useCallback(async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data: profile } = await supabase.from('profiles').select('org_id').eq('id', user.id).single();
+        if (!profile?.org_id) return;
+        setOrgId(profile.org_id);
+        const { data } = await supabase.from('org_integrations').select('*').eq('org_id', profile.org_id);
+        setDbIntegrations(data ?? []);
+        setLoading(false);
+    }, [supabase]);
+
+    useEffect(() => { loadIntegrations(); }, [loadIntegrations]);
+
+    const getDbRecord = (id: IntegrationType) => dbIntegrations.find(d => d.type === id);
+    const isConnected = (id: IntegrationType) => !!getDbRecord(id)?.enabled;
+
+    const openConnectModal = (integration: IntegrationDef) => {
+        const existing = getDbRecord(integration.id);
+        const prefilled: Record<string, string> = {};
+        integration.fields.forEach(f => { prefilled[f.key] = (existing as any)?.[f.key] ?? ''; });
+        setModalValues(prefilled);
+        setModalError('');
+        setModalIntegration(integration);
+    };
+
+    const handleDisconnect = async (id: IntegrationType) => {
+        if (!orgId) return;
+        await supabase.from('org_integrations').update({ enabled: false }).eq('org_id', orgId).eq('type', id);
+        setDbIntegrations(prev => prev.map(d => d.type === id ? { ...d, enabled: false } : d));
+    };
+
+    const handleSaveConnection = async () => {
+        if (!modalIntegration || !orgId) return;
+        setModalSaving(true);
+        setModalError('');
+
+        // Build upsert payload
+        const payload: any = {
+            org_id: orgId,
+            type: modalIntegration.id,
+            enabled: true,
+            ...modalValues,
+        };
+
+        const { error } = await supabase.from('org_integrations').upsert(payload, { onConflict: 'org_id,type' });
+        setModalSaving(false);
+        if (error) { setModalError(error.message); return; }
+
+        await loadIntegrations();
+        setModalIntegration(null);
+    };
 
     const filtered = INTEGRATIONS.filter(i =>
         i.name.toLowerCase().includes(search.toLowerCase()) ||
         i.desc.toLowerCase().includes(search.toLowerCase())
     );
 
-    const grouped = CATEGORY_ORDER.reduce<Record<string, Integration[]>>((acc, cat) => {
+    const grouped = CATEGORY_ORDER.reduce<Record<string, IntegrationDef[]>>((acc, cat) => {
         const items = filtered.filter(i => i.category === cat);
         if (items.length > 0) acc[cat] = items;
         return acc;
     }, {});
 
-    const connectedCount = connected.size;
+    const connectedCount = dbIntegrations.filter(d => d.enabled).length;
 
     return (
         <div>
             <Topbar title={t('nav_integrations')} onToggleNotifications={openPanel} />
 
             <div className="page-content">
-                {/* Header stats strip */}
+                {/* Stats */}
                 <div style={{ display: 'flex', gap: 'var(--space-4)', marginBottom: 'var(--space-6)', flexWrap: 'wrap' }}>
-                    <div className="card" style={{ flex: 1, minWidth: 160, display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px' }}>
-                        <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--color-purple-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>⚡</div>
-                        <div>
-                            <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1 }}>{INTEGRATIONS.length}</div>
-                            <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 2 }}>Available</div>
+                    {[
+                        { emoji: '⚡', value: INTEGRATIONS.length, label: 'Available', color: 'var(--color-purple)', bg: 'var(--color-purple-bg)' },
+                        { emoji: '✅', value: connectedCount, label: 'Connected', color: 'var(--color-green)', bg: 'var(--color-green-bg)' },
+                        { emoji: '🔔', value: INTEGRATIONS.length - connectedCount, label: 'Not connected', color: 'var(--color-orange)', bg: 'var(--color-orange-bg)' },
+                    ].map(({ emoji, value, label, color, bg }) => (
+                        <div key={label} className="card" style={{ flex: 1, minWidth: 140, display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px' }}>
+                            <div style={{ width: 44, height: 44, borderRadius: 12, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{emoji}</div>
+                            <div>
+                                <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1, color }}>{value}</div>
+                                <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 2 }}>{label}</div>
+                            </div>
                         </div>
-                    </div>
-                    <div className="card" style={{ flex: 1, minWidth: 160, display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px' }}>
-                        <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--color-green-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>✅</div>
-                        <div>
-                            <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1, color: 'var(--color-green)' }}>{connectedCount}</div>
-                            <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 2 }}>Connected</div>
-                        </div>
-                    </div>
-                    <div className="card" style={{ flex: 1, minWidth: 160, display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px' }}>
-                        <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--color-orange-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>🔔</div>
-                        <div>
-                            <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1, color: 'var(--color-orange)' }}>{INTEGRATIONS.length - connectedCount}</div>
-                            <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 2 }}>Not connected</div>
-                        </div>
-                    </div>
+                    ))}
                 </div>
 
                 {/* Search */}
                 <div style={{ position: 'relative', marginBottom: 'var(--space-6)' }}>
                     <Search size={16} style={{ position: 'absolute', top: '50%', left: 14, transform: 'translateY(-50%)', color: 'var(--color-text-tertiary)', pointerEvents: 'none' }} />
-                    <input
-                        className="form-input"
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        placeholder="Search integrations…"
-                        style={{ paddingLeft: 38 }}
-                    />
+                    <input className="form-input" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search integrations…" style={{ paddingLeft: 38 }} />
                 </div>
 
-                {/* Integration groups */}
-                {Object.entries(grouped).map(([category, items]) => (
-                    <div key={category} style={{ marginBottom: 'var(--space-8)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 'var(--space-4)' }}>
-                            <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-text-tertiary)' }}>
-                                {category}
-                            </div>
-                            <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
-                        </div>
+                {loading ? (
+                    <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
+                        <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', color: 'var(--color-purple)' }} />
+                    </div>
+                ) : (
+                    <>
+                        {/* Integration Groups */}
+                        {Object.entries(grouped).map(([category, items]) => (
+                            <div key={category} style={{ marginBottom: 'var(--space-8)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 'var(--space-4)' }}>
+                                    <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-text-tertiary)' }}>{category}</div>
+                                    <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
+                                </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 'var(--space-4)' }}>
-                            {items.map(integration => {
-                                const isConnected = connected.has(integration.id);
-                                return (
-                                    <div
-                                        key={integration.id}
-                                        className="card"
-                                        style={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            gap: 'var(--space-4)',
-                                            padding: '20px',
-                                            transition: 'box-shadow 0.2s, transform 0.2s',
-                                            border: isConnected ? '1.5px solid var(--color-green)' : '1.5px solid var(--color-border)',
-                                            position: 'relative',
-                                            overflow: 'hidden',
-                                        }}
-                                    >
-                                        {/* Connected glow accent */}
-                                        {isConnected && (
-                                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, var(--color-green), var(--color-accent))' }} />
-                                        )}
-
-                                        {/* Badge */}
-                                        {integration.badge && (
-                                            <div style={{
-                                                position: 'absolute', top: 12, right: 12,
-                                                fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
-                                                padding: '2px 8px', borderRadius: 20,
-                                                background: integration.badge === 'popular' ? 'var(--color-purple-bg)' : 'var(--color-orange-bg)',
-                                                color: integration.badge === 'popular' ? 'var(--color-purple)' : 'var(--color-orange)',
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 'var(--space-4)' }}>
+                                    {items.map(integration => {
+                                        const connected = isConnected(integration.id);
+                                        return (
+                                            <div key={integration.id} className="card" style={{
+                                                display: 'flex', flexDirection: 'column', gap: 'var(--space-4)',
+                                                padding: '20px', position: 'relative', overflow: 'hidden',
+                                                border: connected ? '1.5px solid var(--color-green)' : '1.5px solid var(--color-border)',
+                                                transition: 'border-color 0.2s',
                                             }}>
-                                                {integration.badge}
+                                                {connected && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, var(--color-green), var(--color-accent))' }} />}
+
+                                                {integration.badge && (
+                                                    <span style={{
+                                                        position: 'absolute', top: 12, right: 12,
+                                                        fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
+                                                        padding: '2px 8px', borderRadius: 20,
+                                                        background: integration.badge === 'popular' ? 'var(--color-purple-bg)' : 'var(--color-orange-bg)',
+                                                        color: integration.badge === 'popular' ? 'var(--color-purple)' : 'var(--color-orange)',
+                                                    }}>{integration.badge}</span>
+                                                )}
+
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                                                    <div style={{ width: 52, height: 52, borderRadius: 14, background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                                        <integration.icon />
+                                                    </div>
+                                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                                        <div style={{ fontWeight: 700, fontSize: 16 }}>{integration.name}</div>
+                                                        <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 2 }}>{integration.category}</div>
+                                                    </div>
+                                                    {connected && <CheckCircle2 size={18} style={{ color: 'var(--color-green)', flexShrink: 0 }} />}
+                                                </div>
+
+                                                <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.55, margin: 0 }}>{integration.desc}</p>
+
+                                                <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => connected ? handleDisconnect(integration.id) : openConnectModal(integration)}
+                                                        style={{
+                                                            flex: 1, padding: '8px 0', borderRadius: 8,
+                                                            border: connected ? '1.5px solid var(--color-red)' : '1.5px solid var(--color-purple)',
+                                                            background: connected ? 'var(--color-red-bg)' : 'var(--color-purple-bg)',
+                                                            color: connected ? 'var(--color-red)' : 'var(--color-purple)',
+                                                            fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                                            transition: 'all 0.2s',
+                                                        }}
+                                                    >
+                                                        {connected ? <><X size={14} /> Disconnect</> : <><Circle size={14} /> Connect</>}
+                                                    </button>
+                                                    {integration.docsUrl && (
+                                                        <a href={integration.docsUrl} target="_blank" rel="noopener noreferrer"
+                                                            style={{
+                                                                padding: '8px 12px', borderRadius: 8,
+                                                                border: '1.5px solid var(--color-border)', background: 'transparent',
+                                                                color: 'var(--color-text-secondary)', fontSize: 13, fontWeight: 600,
+                                                                textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4,
+                                                                transition: 'all 0.2s',
+                                                            }}
+                                                        >
+                                                            <ExternalLink size={14} /> Docs
+                                                        </a>
+                                                    )}
+                                                </div>
                                             </div>
-                                        )}
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))}
 
-                                        {/* Icon + name row */}
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                                            <div style={{ width: 52, height: 52, borderRadius: 14, background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                                <integration.icon />
-                                            </div>
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ fontWeight: 700, fontSize: 16 }}>{integration.name}</div>
-                                                <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 2 }}>{integration.category}</div>
-                                            </div>
-                                            {isConnected && <CheckCircle2 size={18} style={{ color: 'var(--color-green)', flexShrink: 0 }} />}
-                                        </div>
-
-                                        {/* Description */}
-                                        <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.55, margin: 0 }}>
-                                            {integration.desc}
-                                        </p>
-
-                                        {/* Actions */}
-                                        <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
-                                            <button
-                                                type="button"
-                                                onClick={() => toggle(integration.id)}
-                                                style={{
-                                                    flex: 1,
-                                                    padding: '8px 0',
-                                                    borderRadius: 8,
-                                                    border: isConnected ? '1.5px solid var(--color-green)' : '1.5px solid var(--color-purple)',
-                                                    background: isConnected ? 'var(--color-green-bg)' : 'var(--color-purple-bg)',
-                                                    color: isConnected ? 'var(--color-green)' : 'var(--color-purple)',
-                                                    fontSize: 13, fontWeight: 700,
-                                                    cursor: 'pointer', transition: 'all 0.2s',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                                                }}
-                                            >
-                                                {isConnected ? <><CheckCircle2 size={14} /> Connected</> : <><Circle size={14} /> Connect</>}
-                                            </button>
-                                            {integration.docsUrl && (
-                                                <a
-                                                    href={integration.docsUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    style={{
-                                                        padding: '8px 12px',
-                                                        borderRadius: 8,
-                                                        border: '1.5px solid var(--color-border)',
-                                                        background: 'transparent',
-                                                        color: 'var(--color-text-secondary)',
-                                                        fontSize: 13, fontWeight: 600,
-                                                        textDecoration: 'none', cursor: 'pointer',
-                                                        display: 'flex', alignItems: 'center', gap: 4,
-                                                        transition: 'all 0.2s',
-                                                    }}
-                                                >
-                                                    <ExternalLink size={14} /> Docs
-                                                </a>
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                ))}
-
-                {filtered.length === 0 && (
-                    <div className="card" style={{ textAlign: 'center', padding: 40 }}>
-                        <div style={{ fontSize: 32, marginBottom: 12 }}>🔌</div>
-                        <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>No integrations found</div>
-                        <div style={{ color: 'var(--color-text-tertiary)', fontSize: 13 }}>Try a different search term</div>
-                    </div>
+                        {filtered.length === 0 && (
+                            <div className="card" style={{ textAlign: 'center', padding: 40 }}>
+                                <div style={{ fontSize: 32, marginBottom: 12 }}>🔌</div>
+                                <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>No integrations found</div>
+                                <div style={{ color: 'var(--color-text-tertiary)', fontSize: 13 }}>Try a different search term</div>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
+
+            {/* Connect Modal */}
+            {modalIntegration && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+                    <div className="card" style={{ width: '100%', maxWidth: 480, padding: 0, overflow: 'hidden' }}>
+                        {/* Modal header */}
+                        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 14 }}>
+                            <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <modalIntegration.icon />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 700, fontSize: 17 }}>Connect {modalIntegration.name}</div>
+                                <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>Enter your credentials below</div>
+                            </div>
+                            <button type="button" onClick={() => setModalIntegration(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-tertiary)', padding: 4 }}>
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Modal body */}
+                        <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                            {modalError && (
+                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, background: 'var(--color-red-bg)', color: 'var(--color-red)', borderRadius: 8, padding: '10px 14px', fontSize: 13 }}>
+                                    <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+                                    {modalError}
+                                </div>
+                            )}
+
+                            {modalIntegration.fields.map(field => (
+                                <div key={field.key} className="form-group">
+                                    <label className="form-label">{field.label}</label>
+                                    <input
+                                        className="form-input"
+                                        value={modalValues[field.key] ?? ''}
+                                        onChange={e => setModalValues(prev => ({ ...prev, [field.key]: e.target.value }))}
+                                        placeholder={field.placeholder}
+                                    />
+                                    {field.hint && <span className="form-hint">{field.hint}</span>}
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Modal footer */}
+                        <div style={{ padding: '16px 24px', borderTop: '1px solid var(--color-border)', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                            <button type="button" className="btn btn-secondary" onClick={() => setModalIntegration(null)}>Cancel</button>
+                            <button
+                                type="button"
+                                className="btn btn-primary"
+                                onClick={handleSaveConnection}
+                                disabled={modalSaving}
+                                style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                            >
+                                {modalSaving ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Saving…</> : <>Save & Connect</>}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
