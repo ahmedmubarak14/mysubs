@@ -195,16 +195,19 @@ export default function SubTrackLanding() {
       <section id="solutions" className="p-4 bg-white mt-12">
         <div className="pt-16 pb-24 px-5 xs:px-8 xl:px-12 rounded-3xl" style={{ backgroundColor: '#F8F6FA' }}>
           <div className="container mx-auto px-4">
-            <div className="flex mb-4 items-center">
-              <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="4" cy="4" r="4" fill="#A855F7"></circle>
-              </svg>
-              <span className="inline-block ml-2 text-sm font-bold text-[#A855F7] tracking-wider uppercase">{t('land_feat_title')}</span>
-            </div>
-            <div className="border-t pt-14" style={{ borderColor: 'rgba(31, 4, 51, 0.1)' }}>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-16 text-center max-w-4xl mx-auto" style={{ color: '#1F0433', letterSpacing: '-0.02em' }}>
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-3 justify-center mb-4">
+                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#A855F7' }}></span>
+                <h2 className="text-4xl md:text-5xl font-bold" style={{ color: '#1F0433', letterSpacing: '-0.02em' }}>
+                  {t('land_feat_title')}
+                </h2>
+              </div>
+              <p className="text-lg md:text-xl text-gray-500 font-medium">
                 {t('land_feat_sub')}
-              </h1>
+              </p>
+            </div>
+
+            <div className="border-t pt-14 mt-4" style={{ borderColor: 'rgba(31, 4, 51, 0.1)' }}>
 
               {/* Dashboard Preview Image */}
               <div className="relative w-full max-w-6xl mx-auto mb-20 md:mb-32">
@@ -256,11 +259,16 @@ export default function SubTrackLanding() {
       {/* HOW IT WORKS */}
       <section id="how" className="py-20 lg:py-32 overflow-hidden">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto mb-20 text-center">
-            <span className="inline-block mb-4 text-sm font-bold tracking-wider uppercase" style={{ color: '#A855F7' }}>{t('land_how_title')}</span>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-10" style={{ color: '#1F0433', letterSpacing: '-0.02em' }}>
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-3 justify-center mb-4">
+              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#A855F7' }}></span>
+              <h2 className="text-4xl md:text-5xl font-bold" style={{ color: '#1F0433', letterSpacing: '-0.02em' }}>
+                {t('land_how_title')}
+              </h2>
+            </div>
+            <p className="text-lg md:text-xl text-gray-500 font-medium">
               {t('land_how_sub')}
-            </h1>
+            </p>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px', maxWidth: '1152px', margin: '0 auto' }}>
@@ -284,10 +292,11 @@ export default function SubTrackLanding() {
             </div>
           </div>
         </div>
-      </section>
+      </section >
 
       {/* FAQ SECTION */}
-      <section className="py-16 lg:py-24" style={{ backgroundColor: '#F8F6FA' }}>
+      < section className="py-16 lg:py-24" style={{ backgroundColor: '#F8F6FA' }
+      }>
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <span className="inline-block mb-4 text-sm font-bold tracking-wider uppercase" style={{ color: '#A855F7' }}>{t('land_faq_title')}</span>
@@ -338,10 +347,10 @@ export default function SubTrackLanding() {
             </div>
           </div>
         </div>
-      </section>
+      </section >
 
       {/* FINAL CTA ENCLOSURE */}
-      <section className="py-20 lg:py-32 px-4 relative bg-white">
+      < section className="py-20 lg:py-32 px-4 relative bg-white" >
         <div className="max-w-5xl mx-auto text-center relative overflow-hidden" style={{ backgroundColor: '#1F0433', padding: '80px 40px', borderRadius: '32px', boxShadow: '0 20px 60px -15px rgba(168, 85, 247, 0.2)' }}>
           {/* Decorative gradients */}
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden rounded-[32px] pointer-events-none">
@@ -366,10 +375,10 @@ export default function SubTrackLanding() {
             </div>
           </div>
         </div>
-      </section>
+      </section >
 
       {/* FOOTER */}
-      <section className="relative py-12 lg:py-20 bg-white overflow-hidden">
+      < section className="relative py-12 lg:py-20 bg-white overflow-hidden" >
         <img className="absolute bottom-0 left-0 opacity-5" src="/fauna-assets/footer/waves-lines-left-bottom.png" alt="" />
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex flex-col items-center justify-center">
@@ -378,8 +387,8 @@ export default function SubTrackLanding() {
             <p className="text-sm text-gray-400">© 2026 SubTrack. {t('land_footer_copy')}</p>
           </div>
         </div>
-      </section>
+      </section >
 
-    </div>
+    </div >
   );
 }
