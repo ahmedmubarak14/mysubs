@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -9,8 +9,9 @@ import {
 } from 'recharts';
 import {
     CreditCard, TrendingUp, AlertTriangle, DollarSign,
-    ArrowRight, Users
+    ArrowRight, Users, Target
 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import type { Subscription, Expense, Profile } from '@/types';
 import { CURRENCIES } from '@/types';
@@ -57,6 +58,16 @@ function getDaysUntilRenewal(renewalDate: string) {
 export default function DashboardClient({ profile, subscriptions, expenses }: Props) {
     const { openPanel } = useNotifications();
     const { t } = useLanguage();
+    const [budgetLimit, setBudgetLimit] = useState<number | null>(null);
+
+    // Fetch org budget limit
+    useMemo(() => {
+        if (!profile?.org_id) return;
+        const supabase = createClient();
+        supabase.from('organizations').select('budget_limit').eq('id', profile.org_id).single()
+            .then(({ data }) => setBudgetLimit(data?.budget_limit ?? null));
+    }, [profile?.org_id]);
+
     const activeSubs = subscriptions.filter(s => s.status !== 'cancelled');
 
     // Stat calculations
@@ -139,12 +150,12 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
                             <div className="stat-card-icon" style={{ background: 'rgba(134, 77, 179, 0.15)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)', width: 40, height: 40, marginBottom: 0 }}>
                                 <DollarSign size={20} color="var(--color-purple)" />
                             </div>
-                            <div className="stat-card-label" style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>{t('dash_monthly_spend')}</div>
+                            <div className="stat-card-label" style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>{t('dash_total_monthly')} / {t('dash_total_annual')}</div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
                             <div>
                                 <div className="stat-card-value">{formatCurrency(totalMonthly)}</div>
-                                <div className="stat-card-subtext" style={{ color: 'var(--color-green)', fontWeight: 600 }}>+4.2% {t('dash_from_last_month')}</div>
+                                <div className="stat-card-subtext" style={{ fontWeight: 600, color: 'var(--color-text-secondary)' }}>{formatCurrency(totalMonthly * 12)} / year</div>
                             </div>
                             <div style={{ width: 80, height: 40, opacity: 0.8 }}>
                                 <ResponsiveContainer width="100%" height="100%">
@@ -157,24 +168,33 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
                     </div>
 
                     <div className="stat-card" style={{ background: 'rgba(255, 255, 255, 0.45)' }}>
-                        <div className="stat-card-glow" style={{ background: 'var(--color-green)', width: 140, height: 140, filter: 'blur(40px)', opacity: 0.2 }} />
+                        <div className="stat-card-glow" style={{ background: budgetLimit && totalMonthly > budgetLimit ? 'var(--color-red)' : 'var(--color-green)', width: 140, height: 140, filter: 'blur(40px)', opacity: 0.2 }} />
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                            <div className="stat-card-icon" style={{ background: 'rgba(52, 199, 89, 0.15)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)', width: 40, height: 40, marginBottom: 0 }}>
-                                <CreditCard size={20} color="var(--color-green)" />
+                            <div className="stat-card-icon" style={{ background: budgetLimit && totalMonthly > budgetLimit ? 'rgba(239, 68, 68, 0.15)' : 'rgba(52, 199, 89, 0.15)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)', width: 40, height: 40, marginBottom: 0 }}>
+                                <Target size={20} color={budgetLimit && totalMonthly > budgetLimit ? 'var(--color-red)' : 'var(--color-green)'} />
                             </div>
-                            <div className="stat-card-label" style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>{t('dash_active_subscriptions')}</div>
+                            <div className="stat-card-label" style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>{t('dash_budget_limit')}</div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-                            <div>
-                                <div className="stat-card-value">{activeSubs.filter(s => s.status === 'active').length}</div>
-                                <div className="stat-card-subtext" style={{ fontWeight: 600 }}>{subscriptions.filter(s => s.status === 'trial').length} {t('dash_in_trial')}</div>
-                            </div>
-                            <div style={{ width: 80, height: 40, opacity: 0.8 }}>
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={sparklineData}>
-                                        <Line type="monotone" dataKey="val" stroke="var(--color-green)" strokeWidth={2.5} dot={false} />
-                                    </LineChart>
-                                </ResponsiveContainer>
+                            <div style={{ width: '100%' }}>
+                                {budgetLimit ? (
+                                    <>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                                            <span className="stat-card-value" style={{ fontSize: 20 }}>{formatCurrency(totalMonthly)}</span>
+                                            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-tertiary)' }}>/ {formatCurrency(budgetLimit)}</span>
+                                        </div>
+                                        <div style={{ width: '100%', height: 6, background: 'var(--color-border)', borderRadius: 3, overflow: 'hidden' }}>
+                                            <div style={{ width: `${Math.min(100, (totalMonthly / budgetLimit) * 100)}%`, height: '100%', background: totalMonthly > budgetLimit ? 'var(--color-red)' : 'var(--color-green)' }} />
+                                        </div>
+                                        <div className="stat-card-subtext" style={{ marginTop: 8, fontWeight: 600, color: totalMonthly > budgetLimit ? 'var(--color-red)' : 'var(--color-green)' }}>
+                                            {totalMonthly > budgetLimit ? t('dash_budget_warning') : t('dash_budget_safe')}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div style={{ fontSize: 13, color: 'var(--color-text-tertiary)', fontWeight: 500, lineHeight: 1.5 }}>
+                                        No budget limit set. Add one in <Link href="/dashboard/settings" style={{ color: 'var(--color-purple)', textDecoration: 'underline' }}>Settings</Link> to track spending.
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -195,136 +215,121 @@ export default function DashboardClient({ profile, subscriptions, expenses }: Pr
                         </div>
                     </div>
 
-                    <div className="stat-card" style={{ background: 'rgba(255, 255, 255, 0.45)' }}>
-                        <div className="stat-card-glow" style={{ background: 'var(--color-blue)', width: 140, height: 140, filter: 'blur(40px)', opacity: 0.2 }} />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                            <div className="stat-card-icon" style={{ background: 'rgba(0, 122, 255, 0.15)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)', width: 40, height: 40, marginBottom: 0 }}>
-                                <TrendingUp size={20} color="var(--color-blue)" />
-                            </div>
-                            <div className="stat-card-label" style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>{t('dash_annual_spend')}</div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-                            <div>
-                                <div className="stat-card-value">{formatCurrency(totalMonthly * 12)}</div>
-                                <div className="stat-card-subtext" style={{ fontWeight: 600 }}>{t('dash_projected')}</div>
-                            </div>
-                        </div>
+                </div>
+            </div>
+
+            {/* Charts Row */}
+            <div className={styles.chartsRow}>
+                {/* Area Chart */}
+                <div className={`card ${styles.spendChart}`}>
+                    <div className={styles.cardHeader}>
+                        <h3 className={styles.cardTitle}>{t('dash_monthly_spend_chart')}</h3>
+                        <span className="badge badge-green" style={{ fontSize: '11px' }}>{t('dash_last_6mo')}</span>
                     </div>
+                    {totalMonthly > 0 ? (
+                        <ResponsiveContainer width="100%" height={220}>
+                            <AreaChart data={spendChartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                                <defs>
+                                    <linearGradient id="spendGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#864DB3" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#864DB3" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                                <XAxis dataKey="month" tick={{ fontSize: 12, fill: 'var(--color-text-tertiary)' }} axisLine={false} tickLine={false} />
+                                <YAxis tick={{ fontSize: 12, fill: 'var(--color-text-tertiary)' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} />
+                                <Tooltip formatter={(v: any) => [`$${Number(v).toFixed(0)}`, t('team_spend_label')]} contentStyle={{ borderRadius: '10px', border: '1.5px solid var(--color-border)', fontSize: 13 }} />
+                                <Area type="monotone" dataKey="spend" stroke="#864DB3" strokeWidth={2.5} fill="url(#spendGrad)" dot={false} activeDot={{ r: 5, fill: '#864DB3' }} />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="empty-state" style={{ padding: '40px' }}>
+                            <p>{t('dash_add_subs')}</p>
+                        </div>
+                    )}
                 </div>
 
-                {/* Charts Row */}
-                <div className={styles.chartsRow}>
-                    {/* Area Chart */}
-                    <div className={`card ${styles.spendChart}`}>
-                        <div className={styles.cardHeader}>
-                            <h3 className={styles.cardTitle}>{t('dash_monthly_spend_chart')}</h3>
-                            <span className="badge badge-green" style={{ fontSize: '11px' }}>{t('dash_last_6mo')}</span>
-                        </div>
-                        {totalMonthly > 0 ? (
-                            <ResponsiveContainer width="100%" height={220}>
-                                <AreaChart data={spendChartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                                    <defs>
-                                        <linearGradient id="spendGrad" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#864DB3" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#864DB3" stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                                    <XAxis dataKey="month" tick={{ fontSize: 12, fill: 'var(--color-text-tertiary)' }} axisLine={false} tickLine={false} />
-                                    <YAxis tick={{ fontSize: 12, fill: 'var(--color-text-tertiary)' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} />
-                                    <Tooltip formatter={(v: any) => [`$${Number(v).toFixed(0)}`, t('team_spend_label')]} contentStyle={{ borderRadius: '10px', border: '1.5px solid var(--color-border)', fontSize: 13 }} />
-                                    <Area type="monotone" dataKey="spend" stroke="#864DB3" strokeWidth={2.5} fill="url(#spendGrad)" dot={false} activeDot={{ r: 5, fill: '#864DB3' }} />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        ) : (
-                            <div className="empty-state" style={{ padding: '40px' }}>
-                                <p>{t('dash_add_subs')}</p>
-                            </div>
-                        )}
+                {/* Pie Chart */}
+                <div className={`card ${styles.categoryChart}`}>
+                    <div className={styles.cardHeader}>
+                        <h3 className={styles.cardTitle}>{t('dash_by_category')}</h3>
                     </div>
-
-                    {/* Pie Chart */}
-                    <div className={`card ${styles.categoryChart}`}>
-                        <div className={styles.cardHeader}>
-                            <h3 className={styles.cardTitle}>{t('dash_by_category')}</h3>
-                        </div>
-                        {categoryData.length > 0 ? (
-                            <ResponsiveContainer width="100%" height={220}>
-                                <PieChart>
-                                    <Pie data={categoryData} cx="50%" cy="50%" innerRadius={55} outerRadius={80}
-                                        dataKey="value" paddingAngle={3}>
-                                        {categoryData.map((_, i) => (
-                                            <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip formatter={(v: any) => [`$${v}`, t('subs_monthly')]} contentStyle={{ borderRadius: '10px', border: '1.5px solid var(--color-border)', fontSize: 13 }} />
-                                    <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        ) : (
-                            <div className="empty-state" style={{ padding: '40px' }}>
-                                <p>{t('dash_no_categories')}</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Bottom Row */}
-                <div className={styles.bottomRow}>
-                    {/* Calendar View */}
-                    <div style={{ flex: 1, minWidth: 320 }}>
-                        <DashboardCalendar subscriptions={subscriptions} />
-                    </div>
-
-                    {/* All Subscriptions Table */}
-                    <div className="card" style={{ flex: 2, padding: 0, overflow: 'hidden' }}>
-                        <div className={styles.cardHeader} style={{ padding: 'var(--space-5) var(--space-5) 0' }}>
-                            <h3 className={styles.cardTitle}>{t('dash_detailed_subs')}</h3>
-                            <Link href="/dashboard/subscriptions" className="btn btn-ghost btn-sm">
-                                {t('dash_view_all')} <ArrowRight size={14} />
-                            </Link>
-                        </div>
-                        <div className="table-wrapper" style={{ border: 'none', borderRadius: 0, marginTop: 'var(--space-4)' }}>
-                            <table className="table">
-                                <thead>
-                                    <tr>
-                                        <th>{t('dash_col_app')}</th>
-                                        <th>{t('dash_col_cost')}</th>
-                                        <th>{t('dash_col_billing')}</th>
-                                        <th>{t('dash_col_renewal')}</th>
-                                        <th>{t('dash_col_status')}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {activeSubs.slice(0, 5).map(sub => (
-                                        <tr key={sub.id}>
-                                            <td>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                                    {sub.logo_url ? (
-                                                        <img src={sub.logo_url} alt={sub.name} width={28} height={28} style={{ borderRadius: 8, objectFit: 'contain', border: '1px solid var(--color-border)', background: 'var(--color-bg-tertiary)', padding: 2 }} />
-                                                    ) : (
-                                                        <div className="icon-wrap-sm" style={{ background: 'var(--color-accent-light)', color: 'var(--color-accent)', fontWeight: 800, fontSize: 13 }}>
-                                                            {sub.name?.[0]?.toUpperCase() || '?'}
-                                                        </div>
-                                                    )}
-                                                    <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--color-text-primary)' }}>{sub.name}</span>
-                                                </div>
-                                            </td>
-                                            <td><span style={{ fontWeight: 700 }}>{formatCurrency(sub.cost, sub.currency)}</span></td>
-                                            <td><span style={{ fontSize: '12px', color: 'var(--color-text-secondary)', textTransform: 'capitalize' }}>{t(('common_' + sub.billing_cycle) as any)}</span></td>
-                                            <td>
-                                                <div style={{ fontSize: '13px', fontWeight: 600 }}>{format(parseISO(sub.renewal_date), 'MMM d, yyyy')}</div>
-                                            </td>
-                                            <td>
-                                                <span className={getStatusBadge(sub.status)} style={{ textTransform: 'capitalize' }}>
-                                                    {t(('subs_status_' + sub.status) as any) || sub.status}
-                                                </span>
-                                            </td>
-                                        </tr>
+                    {categoryData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={220}>
+                            <PieChart>
+                                <Pie data={categoryData} cx="50%" cy="50%" innerRadius={55} outerRadius={80}
+                                    dataKey="value" paddingAngle={3}>
+                                    {categoryData.map((_, i) => (
+                                        <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                                     ))}
-                                </tbody>
-                            </table>
+                                </Pie>
+                                <Tooltip formatter={(v: any) => [`$${v}`, t('subs_monthly')]} contentStyle={{ borderRadius: '10px', border: '1.5px solid var(--color-border)', fontSize: 13 }} />
+                                <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="empty-state" style={{ padding: '40px' }}>
+                            <p>{t('dash_no_categories')}</p>
                         </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Bottom Row */}
+            <div className={styles.bottomRow}>
+                {/* Calendar View */}
+                <div style={{ flex: 1, minWidth: 320 }}>
+                    <DashboardCalendar subscriptions={subscriptions} />
+                </div>
+
+                {/* All Subscriptions Table */}
+                <div className="card" style={{ flex: 2, padding: 0, overflow: 'hidden' }}>
+                    <div className={styles.cardHeader} style={{ padding: 'var(--space-5) var(--space-5) 0' }}>
+                        <h3 className={styles.cardTitle}>{t('dash_detailed_subs')}</h3>
+                        <Link href="/dashboard/subscriptions" className="btn btn-ghost btn-sm">
+                            {t('dash_view_all')} <ArrowRight size={14} />
+                        </Link>
+                    </div>
+                    <div className="table-wrapper" style={{ border: 'none', borderRadius: 0, marginTop: 'var(--space-4)' }}>
+                        <table className="table">
+                            <thead>
+                                <tr>
+                                    <th>{t('dash_col_app')}</th>
+                                    <th>{t('dash_col_cost')}</th>
+                                    <th>{t('dash_col_billing')}</th>
+                                    <th>{t('dash_col_renewal')}</th>
+                                    <th>{t('dash_col_status')}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {activeSubs.slice(0, 5).map(sub => (
+                                    <tr key={sub.id}>
+                                        <td>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                {sub.logo_url ? (
+                                                    <img src={sub.logo_url} alt={sub.name} width={28} height={28} style={{ borderRadius: 8, objectFit: 'contain', border: '1px solid var(--color-border)', background: 'var(--color-bg-tertiary)', padding: 2 }} />
+                                                ) : (
+                                                    <div className="icon-wrap-sm" style={{ background: 'var(--color-accent-light)', color: 'var(--color-accent)', fontWeight: 800, fontSize: 13 }}>
+                                                        {sub.name?.[0]?.toUpperCase() || '?'}
+                                                    </div>
+                                                )}
+                                                <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--color-text-primary)' }}>{sub.name}</span>
+                                            </div>
+                                        </td>
+                                        <td><span style={{ fontWeight: 700 }}>{formatCurrency(sub.cost, sub.currency)}</span></td>
+                                        <td><span style={{ fontSize: '12px', color: 'var(--color-text-secondary)', textTransform: 'capitalize' }}>{t(('common_' + sub.billing_cycle) as any)}</span></td>
+                                        <td>
+                                            <div style={{ fontSize: '13px', fontWeight: 600 }}>{format(parseISO(sub.renewal_date), 'MMM d, yyyy')}</div>
+                                        </td>
+                                        <td>
+                                            <span className={getStatusBadge(sub.status)} style={{ textTransform: 'capitalize' }}>
+                                                {t(('subs_status_' + sub.status) as any) || sub.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

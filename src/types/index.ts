@@ -34,6 +34,7 @@ export interface Subscription {
     start_date: string;
     renewal_date: string;
     status: SubscriptionStatus;
+    tier?: 'free' | 'paid' | 'trial';
     seats: number;
     seat_cost?: number;
     owner_id?: string;

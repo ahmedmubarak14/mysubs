@@ -87,6 +87,7 @@ export default function AddSubscriptionModal({ onClose, subscription, teamMember
         seats: subscription?.seats?.toString() ?? '1',
         owner_id: subscription?.owner_id ?? '',
         status: subscription?.status ?? 'active',
+        tier: subscription?.tier ?? 'paid',
         notes: subscription?.notes ?? '',
     });
 
@@ -156,6 +157,7 @@ export default function AddSubscriptionModal({ onClose, subscription, teamMember
                 seats: parseInt(form.seats) || 0,
                 owner_id: form.owner_id || null,
                 status: form.status,
+                tier: form.tier,
                 notes: form.notes || null,
                 org_id: orgId,
             };
@@ -446,9 +448,19 @@ export default function AddSubscriptionModal({ onClose, subscription, teamMember
                                     <label className="form-label">{t('modal_status')}</label>
                                     <select className="form-select" value={form.status} onChange={e => set('status', e.target.value)}>
                                         <option value="active">{t('subs_status_active')}</option>
-                                        <option value="trial">{t('subs_status_trial')}</option>
+                                        <option value="paused">{t('subs_status_paused')}</option>
                                         <option value="expiring">{t('subs_status_expiring')}</option>
                                         <option value="cancelled">{t('subs_status_cancelled')}</option>
+                                    </select>
+                                </div>
+
+                                {/* Tier */}
+                                <div className="form-group">
+                                    <label className="form-label">{t('modal_tier')}</label>
+                                    <select className="form-select" value={form.tier} onChange={e => set('tier', e.target.value)}>
+                                        <option value="paid">{t('subs_tier_paid')}</option>
+                                        <option value="free">{t('subs_tier_free')}</option>
+                                        <option value="trial">{t('subs_tier_trial')}</option>
                                     </select>
                                 </div>
 

@@ -136,6 +136,13 @@ export default function SubscriptionsClient({ subscriptions: initialSubs, teamMe
         setConfirmDelete(null);
     };
 
+    const updateStatus = async (id: string, newStatus: string) => {
+        const { error } = await supabase.from('subscriptions').update({ status: newStatus }).eq('id', id);
+        if (!error) {
+            setSubscriptions(prev => prev.map(s => s.id === id ? { ...s, status: newStatus as any } : s));
+        }
+    };
+
     /** Confirm renewal: advance renewal_date by one cycle, notify integrations */
     const handleConfirmRenewal = async (sub: Subscription) => {
         setRenewingId(sub.id);
@@ -283,10 +290,17 @@ export default function SubscriptionsClient({ subscriptions: initialSubs, teamMe
                                                     </div>
                                                 )}
                                                 <div>
-                                                    <Link href={`/dashboard/subscriptions/detail?id=${sub.id}`} style={{ fontWeight: 600, fontSize: '14px', color: 'var(--color-text-primary)' }}>
-                                                        {sub.name}
-                                                    </Link>
-                                                    {sub.category && <div style={{ fontSize: '11px', color: 'var(--color-text-tertiary)' }}>{sub.category}</div>}
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                        <Link href={`/dashboard/subscriptions/detail?id=${sub.id}`} style={{ fontWeight: 600, fontSize: '14px', color: 'var(--color-text-primary)' }}>
+                                                            {sub.name}
+                                                        </Link>
+                                                        {sub.tier && (
+                                                            <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: sub.tier === 'free' ? 'var(--color-green-bg)' : sub.tier === 'trial' ? 'var(--color-blue-bg)' : 'var(--color-bg-tertiary)', color: sub.tier === 'free' ? 'var(--color-green)' : sub.tier === 'trial' ? 'var(--color-blue)' : 'var(--color-text-secondary)', fontWeight: 700, textTransform: 'uppercase' }}>
+                                                                {t(('subs_tier_' + sub.tier) as any) || sub.tier}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {sub.category && <div style={{ fontSize: '11px', color: 'var(--color-text-tertiary)', marginTop: 2 }}>{t(('cat_' + sub.category) as any) || sub.category}</div>}
                                                 </div>
                                             </div>
                                         </td>
@@ -308,17 +322,34 @@ export default function SubscriptionsClient({ subscriptions: initialSubs, teamMe
                                             ) : <span style={{ color: 'var(--color-text-tertiary)', fontSize: '13px' }}>Unassigned</span>}
                                         </td>
                                         <td>
-                                            <div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                                                 <div style={{ fontSize: '13px', fontWeight: 600 }}>{format(parseISO(sub.renewal_date), 'MMM d, yyyy')}</div>
-                                                <div style={{ fontSize: '11px', color: days < 7 ? 'var(--color-red)' : days < 30 ? 'var(--color-orange)' : 'var(--color-text-tertiary)', fontWeight: 600 }}>
-                                                    {days < 0 ? 'Overdue' : days === 0 ? 'Today' : `${days}d left`}
-                                                </div>
+                                                {sub.status !== 'cancelled' && (
+                                                    <div style={{
+                                                        fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: 12, display: 'inline-flex', alignSelf: 'flex-start',
+                                                        background: days < 0 ? 'var(--color-red-bg)' : days <= 7 ? 'var(--color-orange-bg)' : 'var(--color-bg-tertiary)',
+                                                        color: days < 0 ? 'var(--color-red)' : days <= 7 ? 'var(--color-orange)' : 'var(--color-text-secondary)'
+                                                    }}>
+                                                        {days < 0 ? 'Overdue' : days === 0 ? 'Renews Today' : `Renews in ${days}d`}
+                                                    </div>
+                                                )}
                                             </div>
                                         </td>
                                         <td>
-                                            <span className={getStatusBadgeClass(sub.status)} style={{ textTransform: 'capitalize' }}>
-                                                {sub.status}
-                                            </span>
+                                            <div className="dropdown" style={{ display: 'inline-block' }}>
+                                                <button tabIndex={0} className={`btn btn-ghost btn-sm ${getStatusBadgeClass(sub.status)}`} style={{ textTransform: 'capitalize', padding: '2px 8px', height: 'auto', minHeight: 'auto', border: 'none', background: 'transparent' }}>
+                                                    {t(('subs_status_' + sub.status) as any) || sub.status} <ChevronDown size={12} style={{ marginLeft: 4 }} />
+                                                </button>
+                                                <ul tabIndex={0} className="dropdown-content menu p-1 shadow-lg bg-base-100 rounded-box w-32 border border-[var(--color-border)] z-[100]" style={{ background: 'var(--color-bg-primary)' }}>
+                                                    {['active', 'expiring', 'paused', 'trial', 'cancelled'].map(st => (
+                                                        <li key={st}>
+                                                            <button onClick={() => updateStatus(sub.id, st)} className={sub.status === st ? 'active' : ''} style={{ fontSize: 13, padding: '6px 10px', textTransform: 'capitalize' }}>
+                                                                {t(('subs_status_' + st) as any) || st}
+                                                            </button>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
                                         </td>
                                         <td>
                                             <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>

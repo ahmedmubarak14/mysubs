@@ -33,6 +33,7 @@ export default function SettingsClient({ profile, orgName, orgId }: Props) {
 
     // ── Org
     const [org, setOrg] = useState(orgName);
+    const [budgetLimit, setBudgetLimit] = useState('');
     const [currency, setCurrency] = useState('USD');
     const [logoUrl, setLogoUrl] = useState('');
 
@@ -58,11 +59,15 @@ export default function SettingsClient({ profile, orgName, orgId }: Props) {
         if (!orgId) return;
         supabase
             .from('organizations')
-            .select('logo_url')
+            .select('name, logo_url, budget_limit')
             .eq('id', orgId)
             .single()
-            .then(({ data }: any) => {
-                if (data?.logo_url) setLogoUrl(data.logo_url);
+            .then(({ data: orgData }: any) => {
+                if (orgData) {
+                    setOrg(orgData.name);
+                    if (orgData.logo_url) setLogoUrl(orgData.logo_url);
+                    if (orgData.budget_limit) setBudgetLimit(orgData.budget_limit.toString());
+                }
             });
     }, [orgId, supabase]);
 
@@ -135,7 +140,10 @@ export default function SettingsClient({ profile, orgName, orgId }: Props) {
             if (profile?.role === 'admin' && orgId) {
                 const { error: orgError } = await supabase
                     .from('organizations')
-                    .update({ name: org })
+                    .update({
+                        name: org,
+                        budget_limit: budgetLimit ? parseFloat(budgetLimit) : null
+                    })
                     .eq('id', orgId);
                 if (orgError) throw new Error(orgError.message);
             }
@@ -268,6 +276,26 @@ export default function SettingsClient({ profile, orgName, orgId }: Props) {
                                 <label className="form-label">{t('settings_org_name')}</label>
                                 <input className="form-input" value={org} onChange={e => setOrg(e.target.value)} disabled={profile?.role !== 'admin'} />
                                 {profile?.role !== 'admin' && <span className="form-hint">{t('settings_org_admin_hint')}</span>}
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">{t('settings_org_budget')}</label>
+                                <div style={{ position: 'relative' }}>
+                                    <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-tertiary)', fontWeight: 600 }}>
+                                        {CURRENCIES.find(c => c.code === currency)?.symbol ?? '$'}
+                                    </span>
+                                    <input
+                                        className="form-input"
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        placeholder="No limit"
+                                        value={budgetLimit}
+                                        onChange={e => setBudgetLimit(e.target.value)}
+                                        disabled={profile?.role !== 'admin'}
+                                        style={{ paddingLeft: 30 }}
+                                    />
+                                </div>
+                                <span className="form-hint">Set a monthly limit to monitor overall organizational spending on the dashboard.</span>
                             </div>
                             <div className="form-group">
                                 <label className="form-label">{t('settings_currency')}</label>
