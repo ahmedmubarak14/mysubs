@@ -336,19 +336,30 @@ export default function SubscriptionsClient({ subscriptions: initialSubs, teamMe
                                             </div>
                                         </td>
                                         <td>
-                                            <div className="dropdown" style={{ display: 'inline-block' }}>
-                                                <button tabIndex={0} className={`btn btn-ghost btn-sm ${getStatusBadgeClass(sub.status)}`} style={{ textTransform: 'capitalize', padding: '2px 8px', height: 'auto', minHeight: 'auto', border: 'none', background: 'transparent' }}>
-                                                    {t(('subs_status_' + sub.status) as any) || sub.status} <ChevronDown size={12} style={{ marginLeft: 4 }} />
-                                                </button>
-                                                <ul tabIndex={0} className="dropdown-content menu p-1 shadow-lg bg-base-100 rounded-box w-32 border border-[var(--color-border)] z-[100]" style={{ background: 'var(--color-bg-primary)' }}>
+                                            <div style={{ position: 'relative', display: 'inline-block' }}>
+                                                <select
+                                                    value={sub.status}
+                                                    onChange={(e) => updateStatus(sub.id, e.target.value)}
+                                                    className={getStatusBadgeClass(sub.status)}
+                                                    style={{
+                                                        textTransform: 'capitalize',
+                                                        padding: '4px 22px 4px 10px',
+                                                        border: 'none',
+                                                        fontSize: 12,
+                                                        fontWeight: 700,
+                                                        cursor: 'pointer',
+                                                        appearance: 'none',
+                                                        WebkitAppearance: 'none',
+                                                        MozAppearance: 'none'
+                                                    }}
+                                                >
                                                     {['active', 'expiring', 'paused', 'trial', 'cancelled'].map(st => (
-                                                        <li key={st}>
-                                                            <button onClick={() => updateStatus(sub.id, st)} className={sub.status === st ? 'active' : ''} style={{ fontSize: 13, padding: '6px 10px', textTransform: 'capitalize' }}>
-                                                                {t(('subs_status_' + st) as any) || st}
-                                                            </button>
-                                                        </li>
+                                                        <option key={st} value={st} style={{ color: 'var(--color-text-primary)', background: 'var(--color-bg-primary)' }}>
+                                                            {t(('subs_status_' + st) as any) || st}
+                                                        </option>
                                                     ))}
-                                                </ul>
+                                                </select>
+                                                <ChevronDown size={12} style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', opacity: 0.7 }} />
                                             </div>
                                         </td>
                                         <td>
