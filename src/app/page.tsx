@@ -90,9 +90,8 @@ export default function SubTrackLanding() {
         <div className="relative pt-18 pb-24 sm:pb-32 lg:pt-36 lg:pb-62">
           <div className="container mx-auto px-4 relative">
             <div className="max-w-xl xl:max-w-2xl mx-auto text-center" style={{ animation: 'fade-in 0.8s ease-out' }}>
-              <div className="inline-flex items-center gap-2 px-3 py-1 mb-8 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#A855F7' }}></span>
-                <span className="text-sm font-medium text-white">{t('land_hero_badge')}</span>
+              <div className="inline-flex items-center px-5 py-2 mb-8 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)' }}>
+                <span className="text-sm sm:text-base font-medium text-white flex items-center">{t('land_hero_badge')}</span>
               </div>
               <h1 className="text-5xl xs:text-6xl xl:text-7xl tracking-tight text-white mb-8 font-bold" style={{ lineHeight: 1.1 }}>
                 {t('land_hero_title')}
