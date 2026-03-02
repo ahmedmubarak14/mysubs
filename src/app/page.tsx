@@ -10,9 +10,11 @@ import {
   CheckCircle2, Plus
 } from 'lucide-react';
 
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || '';
+
 const Logo = () => (
   <div style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-    <img src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/logo-white.png`} alt="SubTrack" style={{ height: 48, width: 'auto' }} />
+    <img src={`${BASE_PATH}/logo-white.png`} alt="SubTrack" style={{ height: 48, width: 'auto' }} />
   </div>
 );
 
@@ -49,7 +51,7 @@ export default function SubTrackLanding() {
     <div className="antialiased font-body" style={{ color: '#1D1F1E', backgroundColor: '#FFFFFF' }}>
       {/* HEADER & HERO SECTION */}
       <section className="relative" style={{ backgroundColor: '#1F0433' }}>
-        <img className="absolute top-0 left-0 w-full h-full object-cover" src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/fauna-assets/headers/bg-waves.png`} alt="" />
+        <img className="absolute top-0 left-0 w-full h-full object-cover" src={`${BASE_PATH}/fauna-assets/headers/bg-waves.png`} alt="" />
 
         <nav className="py-6 position-relative z-10">
           <div className="container mx-auto px-4">
@@ -213,7 +215,7 @@ export default function SubTrackLanding() {
               <div className="relative w-full max-w-6xl mx-auto mb-20 md:mb-32">
                 <div className="absolute inset-0 bg-gradient-to-t from-[#F8F6FA] via-transparent to-transparent z-10 top-1/2"></div>
                 <div className="rounded-2xl md:rounded-[3rem] overflow-hidden border border-gray-200/50 shadow-2xl shadow-purple-900/10">
-                  <img src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/dashboard-preview.png`} alt="SubTrack Dashboard" className="w-full h-auto" />
+                  <img src={`${BASE_PATH}/dashboard-preview.png`} alt="SubTrack Dashboard" className="w-full h-auto" />
                 </div>
               </div>
 
@@ -385,7 +387,7 @@ export default function SubTrackLanding() {
 
       {/* FOOTER */}
       < section className="relative py-12 lg:py-20 bg-white overflow-hidden" >
-        <img className="absolute bottom-0 left-0 opacity-5" src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/fauna-assets/footer/waves-lines-left-bottom.png`} alt="" />
+        <img className="absolute bottom-0 left-0 opacity-5" src={`${BASE_PATH}/fauna-assets/footer/waves-lines-left-bottom.png`} alt="" />
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex flex-col items-center justify-center">
             <LogoDark />
