@@ -137,9 +137,21 @@ export default function SubscriptionsClient({ subscriptions: initialSubs, teamMe
     };
 
     const updateStatus = async (id: string, newStatus: string) => {
+        const sub = subscriptions.find(s => s.id === id);
+        const oldStatus = sub?.status;
         const { error } = await supabase.from('subscriptions').update({ status: newStatus }).eq('id', id);
         if (!error) {
             setSubscriptions(prev => prev.map(s => s.id === id ? { ...s, status: newStatus as any } : s));
+            // Log the change
+            if (oldStatus && oldStatus !== newStatus) {
+                supabase.from('subscription_history').insert({
+                    subscription_id: id,
+                    org_id: orgId,
+                    field_name: 'status',
+                    old_value: oldStatus,
+                    new_value: newStatus,
+                }).then(() => { }).catch(() => { });
+            }
         }
     };
 
@@ -156,6 +168,23 @@ export default function SubscriptionsClient({ subscriptions: initialSubs, teamMe
             setSubscriptions(prev =>
                 prev.map(s => s.id === sub.id ? { ...s, renewal_date: newDate, status: 'active' } : s)
             );
+            // Log payment to history
+            supabase.from('subscription_payments').insert({
+                subscription_id: sub.id,
+                org_id: orgId,
+                paid_at: sub.renewal_date, // the date that was just renewed
+                amount: sub.cost,
+                currency: sub.currency,
+                notes: `Auto-logged on renewal confirmation`,
+            }).then(() => { }).catch(() => { });
+            // Log change history
+            supabase.from('subscription_history').insert({
+                subscription_id: sub.id,
+                org_id: orgId,
+                field_name: 'renewal_date',
+                old_value: sub.renewal_date,
+                new_value: newDate,
+            }).then(() => { }).catch(() => { });
             // Fire webhook alerts for connected integrations
             supabase.functions.invoke('send-webhook-alert', {
                 body: {
@@ -259,6 +288,7 @@ export default function SubscriptionsClient({ subscriptions: initialSubs, teamMe
                                 <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('status')}>
                                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>{t('dash_col_status')} <SortIcon k="status" /></span>
                                 </th>
+                                <th>{t('subs_col_contract')}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -361,6 +391,28 @@ export default function SubscriptionsClient({ subscriptions: initialSubs, teamMe
                                                 </select>
                                                 <ChevronDown size={12} style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', opacity: 0.7 }} />
                                             </div>
+                                        </td>
+                                        <td>
+                                            {sub.contract_end_date ? (() => {
+                                                const contractDays = differenceInDays(parseISO(sub.contract_end_date), new Date());
+                                                return (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                                        <div style={{ fontSize: '12px', fontWeight: 600 }}>
+                                                            {format(parseISO(sub.contract_end_date), 'MMM d, yyyy')}
+                                                        </div>
+                                                        <div style={{
+                                                            fontSize: '11px', fontWeight: 700, padding: '1px 7px',
+                                                            borderRadius: 10, display: 'inline-flex', alignSelf: 'flex-start',
+                                                            background: contractDays < 0 ? 'var(--color-red-bg)' : contractDays <= 30 ? 'var(--color-orange-bg)' : 'var(--color-bg-tertiary)',
+                                                            color: contractDays < 0 ? 'var(--color-red)' : contractDays <= 30 ? 'var(--color-orange)' : 'var(--color-text-secondary)',
+                                                        }}>
+                                                            {contractDays < 0 ? 'Expired' : contractDays === 0 ? 'Today' : `${contractDays}d left`}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })() : (
+                                                <span style={{ color: 'var(--color-text-tertiary)', fontSize: 12 }}>—</span>
+                                            )}
                                         </td>
                                         <td>
                                             <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>

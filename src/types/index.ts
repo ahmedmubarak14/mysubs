@@ -1,6 +1,6 @@
 export type UserRole = 'admin' | 'manager' | 'viewer';
 export type BillingCycle = 'monthly' | 'yearly' | 'quarterly' | 'one-time';
-export type SubscriptionStatus = 'active' | 'expiring' | 'cancelled' | 'trial';
+export type SubscriptionStatus = 'active' | 'expiring' | 'cancelled' | 'trial' | 'paused';
 
 export interface Organization {
     id: string;
@@ -39,10 +39,35 @@ export interface Subscription {
     seat_cost?: number;
     owner_id?: string;
     notes?: string;
+    contract_end_date?: string;
     created_at: string;
     // Joined
     owner?: Profile;
     subscription_users?: SubscriptionUser[];
+}
+
+export interface SubscriptionPayment {
+    id: string;
+    subscription_id: string;
+    org_id: string;
+    paid_at: string;
+    amount: number;
+    currency: string;
+    notes?: string;
+    created_at: string;
+}
+
+export interface SubscriptionHistoryEntry {
+    id: string;
+    subscription_id: string;
+    org_id: string;
+    changed_by?: string;
+    field_name: string;
+    old_value?: string;
+    new_value?: string;
+    changed_at: string;
+    // Joined
+    changer?: Profile;
 }
 
 export interface SubscriptionUser {

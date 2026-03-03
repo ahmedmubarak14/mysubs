@@ -8,6 +8,9 @@ import { differenceInDays, format } from 'date-fns';
 import { ArrowLeft, Edit2, Calendar, Users, DollarSign, Tag, Plus, Trash2 } from 'lucide-react';
 import Topbar from '@/components/Topbar';
 import { useNotifications } from '@/components/NotificationsContext';
+import PaymentHistory from './PaymentHistory';
+import ChangeHistory from './ChangeHistory';
+import type { SubscriptionPayment, SubscriptionHistoryEntry } from '@/types';
 
 function SubscriptionDetail() {
     const { openPanel } = useNotifications();
@@ -15,6 +18,8 @@ function SubscriptionDetail() {
     const id = searchParams.get('id');
     const [sub, setSub] = useState<any | null | 'not-found'>('loading');
     const [team, setTeam] = useState<any[]>([]);
+    const [payments, setPayments] = useState<SubscriptionPayment[]>([]);
+    const [history, setHistory] = useState<SubscriptionHistoryEntry[]>([]);
     const [showAddUser, setShowAddUser] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState('');
     const [selectedRole, setSelectedRole] = useState('user');
@@ -48,6 +53,20 @@ function SubscriptionDetail() {
             }
         };
         fetchSub();
+
+        // Fetch payment history
+        supabase.from('subscription_payments')
+            .select('*')
+            .eq('subscription_id', id)
+            .order('paid_at', { ascending: false })
+            .then(({ data }: { data: SubscriptionPayment[] | null }) => { if (data) setPayments(data); });
+
+        // Fetch change history
+        supabase.from('subscription_history')
+            .select('*, changer:profiles(full_name)')
+            .eq('subscription_id', id)
+            .order('changed_at', { ascending: false })
+            .then(({ data }: { data: SubscriptionHistoryEntry[] | null }) => { if (data) setHistory(data as any); });
     }, [id]);
 
     const handleAddUser = async (e: React.FormEvent) => {
@@ -238,6 +257,10 @@ function SubscriptionDetail() {
                     </div>
                 )}
             </div>
+            {/* Payment History & Change Log */}
+            <PaymentHistory payments={payments} />
+            <ChangeHistory history={history} />
+
             {showAddUser && (
                 <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowAddUser(false); }}>
                     <div className="modal" style={{ maxWidth: 400 }}>

@@ -84,6 +84,7 @@ export default function AddSubscriptionModal({ onClose, subscription, teamMember
         // Dates
         start_date: subscription?.start_date ?? format(new Date(), 'yyyy-MM-dd'),
         renewal_date: subscription?.renewal_date ?? '',
+        contract_end_date: subscription?.contract_end_date ?? '',
         seats: subscription?.seats?.toString() ?? '1',
         owner_id: subscription?.owner_id ?? '',
         status: subscription?.status ?? 'active',
@@ -154,6 +155,7 @@ export default function AddSubscriptionModal({ onClose, subscription, teamMember
                 billing_cycle: form.billing_cycle,
                 start_date: form.start_date || null,
                 renewal_date: form.renewal_date,
+                contract_end_date: form.contract_end_date || null,
                 seats: parseInt(form.seats) || 0,
                 owner_id: form.owner_id || null,
                 status: form.status,
@@ -431,6 +433,19 @@ export default function AddSubscriptionModal({ onClose, subscription, teamMember
                                                 <Info size={11} /> {t('modal_based_on')}{form.billing_cycle}{t('modal_cycle_edit')}
                                             </span>
                                         ) : undefined
+                                    }
+                                />
+
+                                {/* Contract End Date */}
+                                <DatePicker
+                                    value={form.contract_end_date}
+                                    onChange={v => set('contract_end_date', v)}
+                                    label={t('modal_contract_end_date')}
+                                    placeholder="Optional"
+                                    hint={
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--color-text-tertiary)' }}>
+                                            <Info size={11} /> {t('modal_contract_end_hint')}
+                                        </span>
                                     }
                                 />
 
